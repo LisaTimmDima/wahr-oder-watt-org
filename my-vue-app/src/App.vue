@@ -1,14 +1,14 @@
 <script setup>
-import HelloWorld from './components/Login.vue'
+import Login from './components/Login.vue'
 </script>
 
 <template>
   <div>
     <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/logo.png" class="logo vue" alt="Vue logo" />
+      <img src="./assets/logo.svg" class="logo" alt="App logo" />
     </a>
   </div>
-  <HelloWorld msg="Vite + Vue" />
+  <Login msg="Wahr oder Watt?" />
 </template>
 
 <style scoped>
