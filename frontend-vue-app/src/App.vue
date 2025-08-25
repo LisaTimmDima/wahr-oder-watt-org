@@ -1,27 +1,31 @@
+// In App.vue
+
 <script setup>
-import Login from './components/Login.vue'
+import { ref } from 'vue'
+import Login from './views/Login.vue'
+import LobbyView from './views/LobbyView.vue'
+
+// Ein Zustand, der steuert, welche Seite wir sehen.
+// Am Anfang ist der User nicht eingeloggt.
+const isLoggedIn = ref(false)
+
+// Diese Funktion wird von der Login-Komponente aufgerufen,
+// wenn der Login erfolgreich war.
+function onLoginSuccess() {
+  isLoggedIn.value = true
+}
 </script>
 
 <template>
-  <div>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/logo.svg" class="logo" alt="App logo" />
-    </a>
-  </div>
-  <Login msg="Wahr oder Watt?" />
+  <Login v-if="!isLoggedIn" @login-successful="onLoginSuccess" />
+  
+  <LobbyView v-else />
 </template>
 
-<style scoped>
+<style>
+/* Du kannst deine globalen Styles hier behalten oder entfernen */
 .logo {
   height: 6em;
   padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
 }
 </style>
