@@ -2,7 +2,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import Login from './views/Login.vue'
+import Login from './views/LoginView.vue'
 import LobbyView from './views/LobbyView.vue'
 
 // Ein Zustand, der steuert, welche Seite wir sehen.
