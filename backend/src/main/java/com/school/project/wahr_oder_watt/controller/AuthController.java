@@ -32,7 +32,7 @@ public class AuthController {
    * @return a ResponseEntity containing the JWT token if authentication is successful.
    */
   @PostMapping("/login")
-  public ResponseEntity<?> login(@RequestBody RegisterRequest request) {
+  public ResponseEntity<?> login(@RequestBody LoginRequest request) {
     Authentication authentication = authenticationManager.authenticate(
         new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
     );
@@ -40,4 +40,13 @@ public class AuthController {
     String token = jwtUtil.generateToken(userDetails.getUsername());
     return ResponseEntity.ok(token);
   }
+@PostMapping("/register")
+public ResponseEntity<?> login(@RequestBody RegisterRequest request) {
+    Authentication authentication = authenticationManager.authenticate(
+        new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword(), request.getEmail())
+    );
+    UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+    String token = jwtUtil.generateToken(userDetails.getUsername());
+    return ResponseEntity.ok(token);
+}
 }
