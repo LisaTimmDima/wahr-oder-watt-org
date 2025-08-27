@@ -1,6 +1,7 @@
 package com.school.project.wahr_oder_watt.controller;
 
 import com.school.project.wahr_oder_watt.dto.RegisterRequest;
+import com.school.project.wahr_oder_watt.dto.LoginRequest;
 import com.school.project.wahr_oder_watt.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
