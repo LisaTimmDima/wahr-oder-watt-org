@@ -13,16 +13,22 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import jakarta.persistence.Table;
 
 /**
- * Die Klasse User repräsentiert einen Benutzer in der Datenbank.
- * Jeder Benutzer hat eine eindeutige ID, einen Benutzernamen, ein Passwort,
- * sowie Attribute zur Verwaltung von Administratorrechten, Aktivierungsstatus und Punktzahl.
+ * Die Klasse User repräsentiert einen Benutzer in der Datenbank. Jeder Benutzer hat eine eindeutige
+ * ID, einen Benutzernamen, ein Passwort, eine E-Mail-Adresse sowie Attribute zur Verwaltung von
+ * Administratorrechten, Aktivierungsstatus und Punktzahl.
  */
 @Builder
 @Entity
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@Table(name = "user")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
+
   /**
    * id ist der eindeutige Bezeichner für jeden Benutzer.
    */
@@ -37,26 +43,34 @@ public class User {
   private String username;
 
   /**
-   * Das Passwort des Benutzers. Darf nicht null sein.
-   * Wird in JSON-Antworten ignoriert, um die Sicherheit zu gewährleisten.
+   * Das Passwort des Benutzers. Darf nicht null sein. Wird in JSON-Antworten ignoriert, um die
+   * Sicherheit zu gewährleisten.
    */
   @Column(nullable = false)
   @JsonIgnore
   private String password;
 
   /**
+   * Die E-Mail-Adresse des Benutzers. Muss eindeutig sein und darf nicht null sein.
+   */
+  @Column(nullable = false, unique = true)
+  private String email;
+
+  /**
    * Gibt an, ob der Benutzer Administratorrechte hat.
    */
+  @Column
   private boolean isAdmin;
 
   /**
    * Gibt an, ob der Benutzeraccount aktiviert ist.
    */
+  @Column
   private boolean isEnabled;
 
   /**
-   * Das aktuelle Duell, an dem der Benutzer teilnimmt.
-   * Ein Benutzer kann nur an einem aktiven Duell teilnehmen.
+   * Das aktuelle Duell, an dem der Benutzer teilnimmt. Ein Benutzer kann nur an einem aktiven Duell
+   * teilnehmen.
    */
   @ManyToOne
   @JoinColumn(name = "duel_id")

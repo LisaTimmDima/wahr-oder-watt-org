@@ -45,10 +45,16 @@ function handlePasswordReset() {
 }
 
 async function handleLogin() {
-  const url = 'http://localhost:8080/api/auth/login';
-  const payload = mode.value === 'user-login'
-    ? { username: email.value, password: password.value }
-    : { username: username.value, password: password.value };
+  const url = '/api/auth/login';
+  let payload;
+
+  if (mode.value === 'user-login') {
+    payload = { username: email.value, password: password.value };
+  } else if (mode.value === 'admin-login') {
+    payload = { username: adminLoginName.value, password: adminPassword.value };
+  } else {
+    return;
+  }
 
   try {
     const response = await fetch(url, {
@@ -76,7 +82,7 @@ async function handleRegister() {
         alert("Das Passwort muss mindestens 8 Zeichen lang sein.");
         return;
     }
-  const url = 'http://localhost:8080/api/auth/register';
+  const url = '/api/auth/register';
   const payload = {
     username: playerUsername.value,
     password: password.value,

@@ -13,12 +13,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import jakarta.persistence.Table;
 
 /**
  * Die Device-Klasse repräsentiert ein Gerät, das in einem Duell verwendet werden kann.
  * Jedes Gerät hat eine eindeutige ID, eine Bild-URL, einen Aktivitätsstatus und eine Beschreibung.
  */
 @Entity
+@Table(name = "device")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class Device {
 

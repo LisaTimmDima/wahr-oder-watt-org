@@ -12,12 +12,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import jakarta.persistence.Table;
 
 /**
  * Die Klasse Highscore repräsentiert einen Highscore-Eintrag in der Datenbank.
  * Jeder Eintrag enthält eine eindeutige ID, einen Verweis auf den Benutzer (User) und die erreichte Punktzahl (score).
  */
 @Entity
+@Table(name = "highscore")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class Highscore {
   /**
