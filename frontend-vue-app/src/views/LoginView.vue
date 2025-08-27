@@ -44,23 +44,57 @@ function handlePasswordReset() {
   mode.value = 'user-login';
 }
 
-function handleLogin() {
-  if (mode.value === 'user-login') {
-    console.log('User Login Versuch:', email.value, password.value);
-    emit('login-successful'); 
-  } else {
-    console.log('Admin Login Versuch:', adminLoginName.value, adminPassword.value);
-    emit('login-successful'); 
+async function handleLogin() {
+  const url = 'http://localhost:8080/api/auth/login';
+  const payload = mode.value === 'user-login'
+    ? { username: email.value, password: password.value }
+    : { username: username.value, password: password.value };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) throw new Error('Login fehlgeschlagen');
+    const token = await response.text();
+    localStorage.setItem('jwt', token);
+    emit('login-successful');
+  } catch (error) {
+    alert('Fehler: ' + error.message);
   }
 }
 
-function handleRegister() {
+async function handleRegister() {
   console.log(
     'Registrierungs-Versuch:',
     email.value,
     playerUsername.value,
     password.value
   );
+    if (password.value.length < 8) {
+        alert("Das Passwort muss mindestens 8 Zeichen lang sein.");
+        return;
+    }
+  const url = 'http://localhost:8080/api/auth/register';
+  const payload = {
+    username: playerUsername.value,
+    password: password.value,
+    email: email.value
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) throw new Error('Registrierung fehlgeschlagen');
+    const token = await response.text();
+    localStorage.setItem('jwt', token);
+  } catch (error) {
+    alert('Fehler: ' + error.message);
+  }
 }
 </script>
 
