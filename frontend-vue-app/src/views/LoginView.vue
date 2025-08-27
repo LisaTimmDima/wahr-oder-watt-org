@@ -1,25 +1,18 @@
 <script setup>
-import { ref, computed } from 'vue'; // 'computed' importiert für dynamische Titel
-// Um die Icons zu nutzen
+import { ref, computed } from 'vue';
 import { EnvelopeIcon, LockClosedIcon, UserIcon } from '@heroicons/vue/24/solid';
 
-// Definieren das "Signal" (emit), das wir an App.vue senden.
 const emit = defineEmits(['login-successful'])
-
-// Der Zustand, der die Ansicht steuert, wurde erweitert
 const mode = ref('user-login');
 
-// Bestehende Formulardaten
 const email = ref('');
-const username = ref('');
+const playerUsername = ref('');
 const password = ref('');
-
-// Formulardaten für PASSWORT-RESET
+const adminLoginName = ref('');
+const adminPassword = ref('');
 const newPassword = ref('');
 const confirmPassword = ref('');
 
-
-// --- COMPUTED PROPERTY FÜR DYNAMISCHE TITEL ---
 const currentTitle = computed(() => {
   switch(mode.value) {
     case 'forgot-password': return 'Passwort vergessen?';
@@ -30,10 +23,8 @@ const currentTitle = computed(() => {
   }
 });
 
-// Passwort Reset
 function handleForgotPasswordRequest() {
   console.log('Passwort-Reset angefordert für:', email.value);
-  // HIER: API-Aufruf an das Backend, um die E-Mail zu senden.
   mode.value = 'forgot-password-email-sent';
 }
 
@@ -47,36 +38,32 @@ function handlePasswordReset() {
     return;
   }
   console.log('Neues Passwort wird gesetzt:', newPassword.value);
-  // HIER: API-Aufruf, um das Passwort zurückzusetzen.
   alert("Ihr Passwort wurde erfolgreich zurückgesetzt!");
   mode.value = 'user-login';
 }
 
-// Login Funktion
 function handleLogin() {
   if (mode.value === 'user-login') {
     console.log('User Login Versuch:', email.value, password.value);
-    // Hier würde dein API-Aufruf stattfinden.
-    
-    // Wenn der Login erfolgreich ist, sende das Signal nach oben.
     emit('login-successful'); 
-    
   } else {
-    console.log('Admin Login Versuch:', username.value, password.value);
-    // Hier würde die Admin-Anmeldung geprüft.
+    console.log('Admin Login Versuch:', adminLoginName.value, adminPassword.value);
     emit('login-successful'); 
   }
 }
 
-
 function handleRegister() {
-  console.log('Registrierungs-Versuch:', email.value, password.value);
+  console.log(
+    'Registrierungs-Versuch:',
+    email.value,
+    playerUsername.value,
+    password.value
+  );
 }
 </script>
 
 <template>
   <div class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
-    
     <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
 
       <div class="text-center mb-8">
@@ -134,14 +121,21 @@ function handleRegister() {
           <label for="reg-email" class="block text-sm font-medium text-gray-700">Email</label>
           <div class="mt-1 relative">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3"><EnvelopeIcon class="h-5 w-5 text-gray-400" /></span>
-            <input v-model="email" type="email" id="reg-email" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="email@address.com" required>
+            <input v-model="email" type="email" id="reg-email" class="block w-full rounded-md border-gray-300 pl-10" placeholder="email@address.com" required>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label for="reg-username" class="block text-sm font-medium text-gray-700">Benutzername</label>
+          <div class="mt-1 relative">
+             <span class="absolute inset-y-0 left-0 flex items-center pl-3"><UserIcon class="h-5 w-5 text-gray-400" /></span>
+            <input v-model="playerUsername" type="text" id="reg-username" class="block w-full rounded-md border-gray-300 pl-10" placeholder="Wähle einen Namen" required>
           </div>
         </div>
         <div class="mb-6">
           <label for="reg-password" class="block text-sm font-medium text-gray-700">Passwort</label>
           <div class="mt-1 relative">
              <span class="absolute inset-y-0 left-0 flex items-center pl-3"><LockClosedIcon class="h-5 w-5 text-gray-400" /></span>
-            <input v-model="password" type="password" id="reg-password" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="••••••••••" required>
+            <input v-model="password" type="password" id="reg-password" class="block w-full rounded-md border-gray-300 pl-10" placeholder="••••••••••" required>
           </div>
         </div>
         <button type="submit" class="w-full bg-gray-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-700 transition-colors">Konto erstellen</button>
@@ -162,25 +156,26 @@ function handleRegister() {
           <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
            <div class="mt-1 relative">
              <span class="absolute inset-y-0 left-0 flex items-center pl-3"><EnvelopeIcon class="h-5 w-5 text-gray-400" /></span>
-            <input v-model="email" type="email" id="email" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="email@address.com" required>
+            <input v-model="email" type="email" id="email" class="block w-full rounded-md border-gray-300 pl-10" placeholder="email@address.com" required>
           </div>
         </div>
         <div v-if="mode === 'admin-login'" class="mb-4">
           <label for="username" class="block text-sm font-medium text-gray-700">Login</label>
            <div class="mt-1 relative">
              <span class="absolute inset-y-0 left-0 flex items-center pl-3"><UserIcon class="h-5 w-5 text-gray-400" /></span>
-            <input v-model="username" type="text" id="username" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="Username" required>
+            <input v-model="adminLoginName" type="text" id="username" class="block w-full rounded-md border-gray-300 pl-10" placeholder="Username" required>
           </div>
         </div>
         <div class="mb-2">
           <label for="password" class="block text-sm font-medium text-gray-700">Passwort</label>
           <div class="mt-1 relative">
              <span class="absolute inset-y-0 left-0 flex items-center pl-3"><LockClosedIcon class="h-5 w-5 text-gray-400" /></span>
-            <input v-model="password" type="password" id="password" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="••••••••••" required>
+             <input v-if="mode === 'user-login'" v-model="password" type="password" id="password" class="block w-full rounded-md border-gray-300 pl-10" placeholder="••••••••••" required>
+             <input v-if="mode === 'admin-login'" v-model="adminPassword" type="password" id="admin-password" class="block w-full rounded-md border-gray-300 pl-10" placeholder="••••••••••" required>
           </div>
         </div>
-        <div class="text-right mb-6">
-          <button type="button" @click="mode = 'forgot-password'" class="text-sm font-medium text-blue-600 hover:underline">Passwort vergessen?</button>
+        <div class="text-right mb-6 h-6">
+          <button v-if="mode === 'user-login'" type="button" @click="mode = 'forgot-password'" class="text-sm font-medium text-blue-600 hover:underline">Passwort vergessen?</button>
         </div>
         <button type="submit" class="w-full bg-gray-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-700 transition-colors">Anmelden</button>
         <p class="text-sm text-center text-gray-600 mt-8">

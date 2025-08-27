@@ -3,6 +3,8 @@ import { ref, onMounted } from 'vue';
 // Um die Icons zu nutzen
 import { UserCircleIcon } from '@heroicons/vue/24/solid';
 
+const emit = defineEmits(['start-game', 'show-help'])
+
 // Mock-Daten für den eingeloggten User
 const loggedInUser = ref({
   id: 1,
@@ -15,7 +17,13 @@ const availablePlayers = ref([]);
 // Funktion, um einen Spieler herauszufordern
 function challengePlayer(player) {
   alert(`Du hast ${player.name} zu einem Duell herausgefordert!`);
-  // Logik zum Starten des Spiels
+  // Sende das 'start-game'-Ereignis und gib das Spieler-Objekt mit.
+  emit('start-game', player);
+}
+
+// Funktion, wenn der Hilfe-Button geklickt wird
+function onHelpClick() {
+    emit('show-help')
 }
 
 // Mock-Funktion, die eine Backend-Anfrage simuliert
@@ -87,7 +95,7 @@ onMounted(async () => {
         <button class="bg-gray-200 text-gray-800 font-bold py-3 px-8 rounded-lg hover:bg-gray-300 transition-colors">
           Highscores
         </button>
-        <button class="bg-gray-200 text-gray-800 font-bold py-3 px-8 rounded-lg hover:bg-gray-300 transition-colors">
+        <button @click="onHelpClick" class="bg-gray-200 text-gray-800 font-bold py-3 px-8 rounded-lg hover:bg-gray-300 transition-colors">
           Hilfe
         </button>
       </footer>
