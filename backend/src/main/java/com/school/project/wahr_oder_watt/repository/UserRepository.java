@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * Repository interface for User entity, providing CRUD operations and custom queries.
  */
 public interface UserRepository extends JpaRepository<User, Long> {
-  Optional<User> findByUsername(String username);
+  Optional<User> findByEmail(String email);
 }

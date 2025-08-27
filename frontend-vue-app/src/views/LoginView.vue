@@ -49,7 +49,7 @@ async function handleLogin() {
   let payload;
 
   if (mode.value === 'user-login') {
-    payload = { username: email.value, password: password.value };
+    payload = { email: email.value, password: password.value };
   } else if (mode.value === 'admin-login') {
     payload = { username: adminLoginName.value, password: adminPassword.value };
   } else {
