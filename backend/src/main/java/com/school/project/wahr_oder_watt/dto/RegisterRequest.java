@@ -19,4 +19,9 @@ public class RegisterRequest {
    * The password of the user.
    */
   private String password;
+
+  /**
+   * The email of the user.
+   */
+  private String email;
 }

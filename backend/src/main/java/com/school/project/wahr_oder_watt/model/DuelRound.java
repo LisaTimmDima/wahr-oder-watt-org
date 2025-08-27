@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import jakarta.persistence.Table;
 
 /**
  * Die Klasse DuelRound repräsentiert eine Runde in einem Duell.
@@ -17,6 +18,7 @@ import lombok.Setter;
  * und die Rundennummer innerhalb des Duells.
  */
 @Entity
+@Table(name = "duel_round")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class DuelRound {
 
