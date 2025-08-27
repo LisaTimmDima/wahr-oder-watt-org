@@ -46,10 +46,3 @@ function showLobby() {
 
 </template>
 
-<style>
-/* Deine globalen Styles bleiben hier */
-.logo {
-  height: 6em;
-  padding: 1.5em;
-}
-</style>

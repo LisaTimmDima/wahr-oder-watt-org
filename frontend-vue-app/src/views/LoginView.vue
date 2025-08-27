@@ -5,7 +5,6 @@ import { EnvelopeIcon, LockClosedIcon, UserIcon } from '@heroicons/vue/24/solid'
 const emit = defineEmits(['login-successful'])
 const mode = ref('user-login');
 
-// Alle Datenvariablen sind korrekt
 const email = ref('');
 const playerUsername = ref('');
 const password = ref('');
@@ -24,7 +23,6 @@ const currentTitle = computed(() => {
   }
 });
 
-// Alle Funktionen sind korrekt
 function handleForgotPasswordRequest() {
   console.log('Passwort-Reset angefordert für:', email.value);
   mode.value = 'forgot-password-email-sent';
