@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
  * AuthController handles authentication requests such as user login. It uses AuthenticationManager
  * to authenticate users and JwtUtil to generate JWT tokens.
  */
-@CrossOrigin(origins = "http://localhost:5176")
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor

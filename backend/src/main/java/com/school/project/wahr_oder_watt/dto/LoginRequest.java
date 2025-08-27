@@ -11,9 +11,9 @@ import lombok.Setter;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class LoginRequest {
     /**
-     * The username of the user.
+     * The email of the user.
      */
-    private String username;
+    private String email;
 
     /**
      * The password of the user.
