@@ -47,6 +47,7 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+**/target/
 
 # Optional lock files (if you want to ignore them)
 # package-lock.json
