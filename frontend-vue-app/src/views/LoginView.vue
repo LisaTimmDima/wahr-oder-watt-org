@@ -44,26 +44,35 @@ function handlePasswordReset() {
 
 async function handleLogin() {
   const url = '/api/auth/login';
+  const urladmin = '/api/auth/login_admin';
   let payload;
 
-  if (mode.value === 'user-login') {
-    payload = { email: email.value, password: password.value };
-  } else if (mode.value === 'admin-login') {
-    payload = { username: adminLoginName.value, password: adminPassword.value };
-  } else {
-    return;
-  }
-
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (!response.ok) throw new Error('Login fehlgeschlagen');
-    const token = await response.text();
-    localStorage.setItem('jwt', token);
-    emit('login-successful');
+    if (mode.value === 'user-login') {
+      payload = { email: email.value, password: password.value };
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) throw new Error('Login fehlgeschlagen');
+      const token = await response.text();
+      localStorage.setItem('jwt', token);
+      emit('login-successful');
+    } else if (mode.value === 'admin-login') {
+      payload = { username: adminLoginName.value, password: adminPassword.value };
+      const response = await fetch(urladmin, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) throw new Error('Login fehlgeschlagen');
+      const token = await response.text();
+      localStorage.setItem('jwt', token);
+      emit('login-successful');
+    } else {
+      return;
+    }
   } catch (error) {
     alert('Fehler: ' + error.message);
   }

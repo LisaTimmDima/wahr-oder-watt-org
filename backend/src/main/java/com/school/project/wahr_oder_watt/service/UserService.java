@@ -28,6 +28,24 @@ public class UserService {
   }
 
   /**
+   * Sucht einen Benutzer anhand der E-Mail-Adresse.
+   *
+   * @param email E-Mail-Adresse des gesuchten Benutzers.
+   * @return Benutzer mit der angegebenen E-Mail-Adresse oder null, falls nicht gefunden.
+   */
+  public User findByEmail(String email) {
+    return userRepository.findByEmail(email).orElse(null);
+  }
+  /**
+   * Sucht einen Benutzer anhand des Benutzernamens.
+   *
+   * @param username Benutzername des gesuchten Benutzers.
+   * @return Benutzer mit dem angegebenen Benutzernamen oder null, falls nicht gefunden.
+   */
+  public User findByUsername(String username) {
+    return userRepository.findByUsername(username).orElse(null);
+  }
+  /**
    * Sucht einen Benutzer anhand der ID.
    *
    * @param id ID des gesuchten Benutzers.
@@ -75,7 +93,6 @@ public class UserService {
   public void delete(Long id) {
     userRepository.deleteById(id);
   }
-  // Java
 
   /**
    * Registriert einen neuen Benutzer basierend auf den Angaben im RegisterRequest.
@@ -88,7 +105,7 @@ public class UserService {
     user.setUsername(request.getUsername());
     user.setPassword(passwordEncoder.encode(request.getPassword()));
     user.setEmail(request.getEmail());
-    user.setAdmin(false); // Standardmäßig kein Admin
+    user.setAdmin(true); // Standardmäßig kein Admin
     user.setEnabled(true); // Standardmäßig aktiviert
     user.setScore(0); // Anfangspunktzahl
     userRepository.save(user);

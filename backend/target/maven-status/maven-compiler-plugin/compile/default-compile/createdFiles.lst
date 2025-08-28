@@ -1,5 +1,6 @@
 com\school\project\wahr_oder_watt\model\DuelMode.class
 com\school\project\wahr_oder_watt\WahrOderWattApplication.class
+com\school\project\wahr_oder_watt\dto\AdminLoginRequest.class
 com\school\project\wahr_oder_watt\model\User$UserBuilder.class
 com\school\project\wahr_oder_watt\model\Highscore.class
 com\school\project\wahr_oder_watt\repository\UserRepository.class
