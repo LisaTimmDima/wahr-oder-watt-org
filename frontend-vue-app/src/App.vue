@@ -10,6 +10,9 @@ import HighscoreView from './views/HighscoreView.vue';
 // Statt eines einfachen true/false, speichern wir den Namen der aktuellen Ansicht.
 const currentView = ref('login') // Startansicht ist 'login'
 
+// --- NEU: Ein Ref, um die Spieldetails zu speichern ---
+const currentGameDetails = ref(null);
+
 // --- ÄNDERUNG 2: Funktionen zum Wechseln der Ansicht ---
 // Wird vom Login aufgerufen
 function onLoginSuccess() {
@@ -18,9 +21,10 @@ function onLoginSuccess() {
 
 // --- GEÄNDERT: Diese Funktion empfängt jetzt das ganze Objekt ---
 function onGameStart(gameDetails) {
-  console.log('Spiel gestartet gegen:', gameDetails.opponent.name);
-  console.log('Ausgewähltes Level:', gameDetails.level);
-  currentView.value = 'game';
+  console.log('App.vue: Signal "start-game" empfangen!', gameDetails); 
+
+  currentGameDetails.value = gameDetails; // Speichert Level und Gegner
+  currentView.value = 'game'; // Wechselt zur Spielansicht
 }
 
 // Wird von der Lobby aufgerufen, um die Hilfe anzuzeigen
@@ -41,15 +45,15 @@ function showLobby() {
 <template>
   <Login v-if="currentView === 'login'" @login-successful="onLoginSuccess" />
   
-  <LobbyView 
-    v-else-if="currentView === 'lobby'" 
-    @start-game="onGameStart" 
-    @show-help="showHelp"
-    @show-highscores="showHighscores"
-  />
+ <LobbyView 
+  v-else-if="currentView === 'lobby'" 
+  @start-game="onGameStart"  @show-help="showHelp"
+  @show-highscores="showHighscores"
+/>
+  <SpielView v-else-if="currentView === 'game'" :game-details="currentGameDetails" />
   
-  <SpielView v-else-if="currentView === 'game'" />
   <HilfeView v-else-if="currentView === 'hilfe'" @show-lobby="showLobby" />
+
   <HighscoreView v-else-if="currentView === 'highscores'" @show-lobby="showLobby" />
 
 </template>

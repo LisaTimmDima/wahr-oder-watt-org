@@ -28,7 +28,10 @@ const selectedLevel = ref(1);
 
 // Funktion, um einen Spieler herauszufordern
 function challengePlayer(player) {
- emit('start-game', { 
+  // debug
+  console.log('LobbyView: Sende "start-game" Signal...'); 
+  
+  emit('start-game', { 
     opponent: player, 
     level: selectedLevel.value 
   });
