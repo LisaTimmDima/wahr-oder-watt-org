@@ -5,6 +5,7 @@ import LobbyView from './views/LobbyView.vue'
 import HilfeView from './views/HilfeView.vue'
 import SpielView from './views/SpielView.vue'
 import HighscoreView from './views/HighscoreView.vue';
+import AdminLayout from './layouts/AdminLayout.vue';
 
 // --- ÄNDERUNG 1: Der Zustand, der die Ansicht steuert ---
 // Statt eines einfachen true/false, speichern wir den Namen der aktuellen Ansicht.
@@ -17,6 +18,10 @@ const currentGameDetails = ref(null);
 // Wird vom Login aufgerufen
 function onLoginSuccess() {
   currentView.value = 'lobby'
+}
+
+function onAdminLoginSuccess() {
+  currentView.value = 'admin';
 }
 
 // --- GEÄNDERT: Diese Funktion empfängt jetzt das ganze Objekt ---
@@ -43,13 +48,19 @@ function showLobby() {
 </script>
 
 <template>
-  <Login v-if="currentView === 'login'" @login-successful="onLoginSuccess" />
+  <Login 
+    v-if="currentView === 'login'" 
+    @login-successful="onLoginSuccess" 
+    @admin-login-successful="onAdminLoginSuccess" 
+  />
   
  <LobbyView 
   v-else-if="currentView === 'lobby'" 
   @start-game="onGameStart"  @show-help="showHelp"
   @show-highscores="showHighscores"
 />
+  <AdminLayout v-else-if="currentView === 'admin'" />
+  
   <SpielView v-else-if="currentView === 'game'" :game-details="currentGameDetails" />
   
   <HilfeView v-else-if="currentView === 'hilfe'" @show-lobby="showLobby" />

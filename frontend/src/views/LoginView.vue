@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue';
 import { EnvelopeIcon, LockClosedIcon, UserIcon } from '@heroicons/vue/24/solid';
 
-const emit = defineEmits(['login-successful'])
+const emit = defineEmits(['login-successful', 'admin-login-successful']);
 const mode = ref('user-login');
 
 const email = ref('');
@@ -70,7 +70,7 @@ async function handleLogin() {
       if (!response.ok) throw new Error('Login fehlgeschlagen');
       const token = await response.text();
       localStorage.setItem('jwt', token);
-      emit('login-successful');
+      emit('admin-login-successful');
     } else {
       return;
     }

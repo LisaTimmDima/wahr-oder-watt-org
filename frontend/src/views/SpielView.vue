@@ -11,7 +11,7 @@ const props = defineProps({
 });
 
 // Spieler-Daten werden jetzt aus den props abgeleitet
-const loggedInPlayer = ref({ name: 'Spieler 1' }); 
+const loggedInPlayer = ref({ name: 'Spieler 1', score: 0 });
 const opponentPlayer = computed(() => props.gameDetails.opponent);
 const level = computed(() => props.gameDetails.level);
 
@@ -25,11 +25,12 @@ let timerInterval = null;
 const currentQuestion = ref({
   item: { name: 'Monitor', icon: '🖥️' },
   answers: [
-    { id: 'a1', icon: '🛜' },
-    { id: 'a2', icon: '🔌' },
-    { id: 'a3', icon: '📀' },
-    { id: 'a4', icon: '⌨️' },
-  ]
+    { id: 'e1', icon: '🛜' },
+    { id: 'e2', icon: '🔌' },
+    { id: 'e3', icon: '📀' },
+    { id: 'e4', icon: '⌨️' },
+  ],
+  correctAnswers: ['e2', 'e4']
 });
 
 // Logik für das Auswählen von Antworten
@@ -46,6 +47,35 @@ const isSelected = computed(() => {
   return (answerId) => selectedAnswers.value.includes(answerId);
 });
 
+function submitAnswers(isTimeout = false) {
+  clearInterval(timerInterval);
+
+  if (isTimeout) {
+    alert("Zeit abgelaufen!");
+  }
+
+  let scoreForRound = 0;
+  for (const answerId of selectedAnswers.value) {
+    if (currentQuestion.value.correctAnswers.includes(answerId)) {
+      scoreForRound++;
+    }
+  }
+
+  loggedInPlayer.value.score += scoreForRound;
+
+  alert(`You scored ${scoreForRound} points in this round! Total score: ${loggedInPlayer.value.score}`);
+
+  // Reset for next round or end game
+  if (currentRound.value < maxRounds) {
+    currentRound.value++;
+    selectedAnswers.value = [];
+    startTimer();
+  } else {
+    alert(`Game Over! Final Score: ${loggedInPlayer.value.score}`);
+    // Redirect or show final score
+  }
+}
+
 // Timer-Logik
 function startTimer() {
   clearInterval(timerInterval);
@@ -54,8 +84,7 @@ function startTimer() {
     if (timer.value > 0) {
       timer.value--;
     } else {
-      clearInterval(timerInterval);
-      alert("Zeit abgelaufen!");
+      submitAnswers(true);
     }
   }, 1000);
 }
@@ -80,7 +109,10 @@ onUnmounted(() => {
       <header class="grid grid-cols-3 items-center gap-4 mb-6">
         <div class="flex items-center gap-3">
           <UserCircleIcon class="h-10 w-10 text-gray-400" />
-          <span class="text-xl font-semibold text-gray-800">{{ loggedInPlayer.name }}</span>
+          <div>
+            <span class="text-xl font-semibold text-gray-800">{{ loggedInPlayer.name }}</span>
+            <div class="text-l font-bold text-gray-600">Score: {{ loggedInPlayer.score }}</div>
+          </div>
         </div>
 
         <div class="flex flex-col items-center justify-center">
@@ -120,6 +152,11 @@ onUnmounted(() => {
           >
             <span class="text-3xl font-bold">{{ answer.icon }}</span>
             <span class="font-semibold">{{ answer.text }}</span>
+          </button>
+        </div>
+        <div class="mt-8">
+          <button @click="submitAnswers(false)" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+            OK
           </button>
         </div>
       </main>
