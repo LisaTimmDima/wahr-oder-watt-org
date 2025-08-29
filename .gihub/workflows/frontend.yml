@@ -1,0 +1,45 @@
+ame: Frond
+
+
+on:
+  push:
+    branches: [ "cicd" ]
+  pull_request:
+    branches: [ "main" ]
+
+
+jobs:
+  lint-and-format:
+    name: Lint and Format Check
+    runs-on: ubuntu-latest 
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Sets up Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Specify a Node.js version
+          cache: 'npm' # Use npm's cache for faster dependency installation
+
+      # Installs project dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Runs ESLint to check for linting errors
+      - name: Run ESLint
+        id: lint
+        run: npm run lint
+
+        # Ensure your package.json has a "test" script like: "test": "vitest run"
+      - name: Run Vitest tests
+        id: test
+        if: steps.lint.outcome == 'success'
+        run: npm test
+
+      - name: Build application
+        if: steps.test.outcome == 'success'
+        run: npm run build
+  
