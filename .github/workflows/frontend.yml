@@ -28,19 +28,22 @@ jobs:
       # Installs project dependencies
       - name: Install dependencies
         run: npm install
+        working-directory: ./frontend
 
       # Runs ESLint to check for linting errors
       - name: Run ESLint
         id: lint
         run: npm run lint
+        working-directory: ./frontend
 
         # Ensure your package.json has a "test" script like: "test": "vitest run"
       - name: Run Vitest tests
         id: test
         if: steps.lint.outcome == 'success'
         run: npm test
+        working-directory: ./frontend
 
       - name: Build application
         if: steps.test.outcome == 'success'
         run: npm run build
-  
+        working-directory: ./frontend
