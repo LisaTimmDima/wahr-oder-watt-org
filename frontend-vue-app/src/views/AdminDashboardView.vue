@@ -4,11 +4,21 @@ import { UsersIcon, CogIcon, LockClosedIcon } from '@heroicons/vue/24/outline';
 
 // Mock data for the dashboard overview
 const usersToApprove = ref(1);
+
+const logout = () => {
+  localStorage.removeItem('token');
+  window.location.href = '/login';
+};
 </script>
 
 <template>
   <div>
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">Schnellzugriff</h2>
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Schnellzugriff</h2>
+      <button @click="logout" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+        Abmelden
+      </button>
+    </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
       <button class="bg-white p-6 rounded-xl shadow-sm text-left hover:bg-gray-50 transition-colors">
         <div class="flex justify-between items-center">
