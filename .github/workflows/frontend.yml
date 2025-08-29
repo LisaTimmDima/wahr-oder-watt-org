@@ -3,7 +3,7 @@ name: Frontend ci
 
 on:
   push:
-    branches: [ "cicd" ]
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
