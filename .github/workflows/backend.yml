@@ -2,9 +2,13 @@ name: Maven build
 
 on:
   push:
-    branches: [ "cicd" ]
+    branches: [ "main" ]
+    paths:
+      - backend/**
   pull_request:
     branches: [ "main" ]
+    paths:
+    - backend/**
 
 jobs:
   build-and-test:
