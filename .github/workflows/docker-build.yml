@@ -11,7 +11,7 @@ env:
     VERSION: 1.0.0
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
     permissions:
       contents: 'read'
@@ -26,7 +26,8 @@ jobs:
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-    
+          service_account: ${{ secrets.GCP_SA }}
+
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v1'
 
