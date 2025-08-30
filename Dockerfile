@@ -25,7 +25,7 @@ FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 # copy backend jar
-COPY --from=backend-build /app/backend/target/app.jar ./app.jar
+COPY --from=backend-build /app/backend/target/*.jar ./app.jar
 
 # copy frontend build in sb static
 COPY --from=frontend-build /app/frontend/dist ./static
