@@ -42,9 +42,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/wowapp:${VERSION}
-        env:
-          REGION: ${{ secrets.GCP_REGION }}
-          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          REPO: ${{ secrets.GCP_ARTIFACT_REPO }}
-          VERSION: 1.0.0
+            ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/wowapp:v1.0.0
+    
