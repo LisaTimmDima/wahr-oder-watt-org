@@ -30,8 +30,16 @@ jobs:
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v1'
 
-      - name: 'Use gcloud CLI'
-        run: 'gcloud info'
+      - name: Verify
+        run: |
+            gcloud auth list
+            gcloud config list project
+        
+      - name: Check Artifact Registry access
+        run: |
+          gcloud artifacts repositories list \
+            --location=europe-west3 \
+            --project=${{ env.GCP_PROJECT_ID }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
