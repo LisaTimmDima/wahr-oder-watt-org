@@ -31,6 +31,6 @@ COPY --from=backend-build /app/backend/target/*.jar ./app.jar
 COPY --from=frontend-build /app/frontend/dist ./static
 
 # port
-EXPOSE 8080
+ENV PORT=8080
 
 ENTRYPOINT ["java","-jar","app.jar"]
