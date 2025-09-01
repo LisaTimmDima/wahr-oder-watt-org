@@ -1,42 +1,31 @@
 <script setup>
 import { ref } from 'vue';
-import { UsersIcon, CogIcon, LockClosedIcon } from '@heroicons/vue/24/outline';
+import { UsersIcon, CubeIcon, BellIcon } from '@heroicons/vue/24/outline';
 
-// Mock data for the dashboard overview
-const usersToApprove = ref(1);
+const stats = ref([
+  { name: 'Benutzer zur Freischaltung', value: 1, icon: BellIcon, color: 'bg-red-500' },
+  { name: 'Gesamte Benutzer', value: 12, icon: UsersIcon, color: 'bg-blue-500' },
+  { name: 'Gesamte Eigenschaften', value: 138, icon: CubeIcon, color: 'bg-yellow-500' },
+]);
 
-const logout = () => {
-  localStorage.removeItem('token');
-  window.location.href = '/login';
-};
 </script>
 
 <template>
-  <div>
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold text-gray-800">Schnellzugriff</h2>
-      <button @click="logout" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-        Abmelden
-      </button>
-    </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-      <button class="bg-white p-6 rounded-xl shadow-sm text-left hover:bg-gray-50 transition-colors">
-        <div class="flex justify-between items-center">
-          <span class="text-lg font-semibold text-gray-700">Spielen</span>
-          <UsersIcon class="h-8 w-8 text-gray-400" />
-        </div>
-      </button>
-    </div>
+  <div class="p-4 sm:p-6 bg-gray-100 min-h-full">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Admin Dashboard</h1>
 
-    <h2 class="text-2xl font-bold text-gray-800 mt-12 mb-6">Übersicht</h2>
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-      <div class="bg-gray-800 text-white p-6 rounded-xl shadow-lg">
-        <div class="flex justify-between items-center">
-          <span class="font-semibold">Benutzer Freischalten</span>
-          <LockClosedIcon class="h-6 w-6 text-gray-400" />
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+      <div v-for="stat in stats" :key="stat.name" :class="['text-white p-6 rounded-2xl shadow-lg', stat.color]">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-4xl font-extrabold">{{ stat.value }}</p>
+            <p class="text-lg font-semibold">{{ stat.name }}</p>
+          </div>
+          <component :is="stat.icon" class="h-10 w-10 opacity-80" />
         </div>
-        <div class="text-4xl font-bold mt-2">{{ usersToApprove }}</div>
       </div>
     </div>
+
   </div>
 </template>
