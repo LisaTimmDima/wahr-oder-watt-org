@@ -61,7 +61,7 @@ function showLobby() {
 />
   <AdminLayout v-else-if="currentView === 'admin'" />
   
-  <SpielView v-else-if="currentView === 'game'" :game-details="currentGameDetails" />
+  <SpielView v-else-if="currentView === 'game'" :game-details="currentGameDetails" @show-lobby="showLobby" />
   
   <HilfeView v-else-if="currentView === 'hilfe'" @show-lobby="showLobby" />
 

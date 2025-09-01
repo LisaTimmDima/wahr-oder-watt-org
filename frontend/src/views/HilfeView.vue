@@ -20,7 +20,7 @@ const faqs = ref([
   {
     id: 'spielablauf',
     question: 'Spielablauf',
-    answer: 'Lobby & Spielstart: Alle Spieler loggen sich ein und versammeln sich in einer digitalen Lobby. Sobald die gewünschte Spieleranzahl erreicht ist, startet der Spielleiter (oder das System automatisch) das Spiel.'
+    answer: 'Lobby & Spielstart: Alle Spieler loggen sich ein und versammeln sich in einer digitalen Lobby.'
   }
 ]);
 
