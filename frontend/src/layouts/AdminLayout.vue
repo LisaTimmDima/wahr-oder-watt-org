@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { HomeIcon, UsersIcon, CubeIcon, BellIcon, UserCircleIcon, PlayIcon, XMarkIcon } from '@heroicons/vue/24/outline';
+import { HomeIcon, UsersIcon, CubeIcon, BellIcon, UserCircleIcon, PlayIcon, XMarkIcon, ArrowLeftOnRectangleIcon } from '@heroicons/vue/24/outline';
 import AdminDashboardView from '../views/AdminDashboardView.vue';
 import AdminUserManagement from '../views/AdminUserManagement.vue';
 import AdminItemsView from '../views/AdminItemsView.vue';
@@ -13,7 +13,7 @@ const showNotifications = ref(false);
 const navigation = [
   { name: 'Dashboard', view: 'dashboard', icon: HomeIcon },
   { name: 'Benutzer verwalten', view: 'users', icon: UsersIcon },
-  { name: 'Geräte verwalten', view: 'items', icon: CubeIcon },
+  { name: 'Items verwalten', view: 'items', icon: CubeIcon },
 ];
 
 const notifications = ref([
@@ -29,21 +29,34 @@ function navigate(view) {
   activeView.value = view;
 }
 
+function logout() {
+  localStorage.removeItem('jwt');
+  window.location.href = '/login';
+}
+
 </script>
 
 <template>
   <div class="bg-gray-100 min-h-screen flex font-sans">
-    <aside class="w-64 bg-white p-6 flex-shrink-0 shadow-lg">
-      <div class="flex items-center gap-3 mb-10">
-        <img src="../assets/logo.svg" alt="Logo" class="h-24 w-auto">
-        <h1 class="text-xl font-bold text-gray-800">Admin</h1>
+    <aside class="w-64 bg-white p-6 flex flex-col flex-shrink-0 shadow-lg">
+      <div>
+        <div class="flex items-center gap-3 mb-10">
+          <img src="../assets/logo.svg" alt="Logo" class="h-24 w-auto">
+          <h1 class="text-xl font-bold text-gray-800">Admin</h1>
+        </div>
+        <nav class="space-y-2">
+          <button v-for="item in navigation" :key="item.name" @click="activeView = item.view" :class="['w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors', activeView === item.view ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-200']">
+            <component :is="item.icon" class="h-6 w-6" />
+            <span class="font-semibold">{{ item.name }}</span>
+          </button>
+        </nav>
       </div>
-      <nav class="space-y-2">
-        <button v-for="item in navigation" :key="item.name" @click="activeView = item.view" :class="['w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors', activeView === item.view ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-200']">
-          <component :is="item.icon" class="h-6 w-6" />
-          <span class="font-semibold">{{ item.name }}</span>
+      <div class="mt-auto pt-6 border-t border-gray-200">
+        <button @click="logout" class="w-full flex items-center gap-3 p-3 rounded-lg text-left text-red-500 hover:bg-red-50 transition-colors">
+          <ArrowLeftOnRectangleIcon class="h-6 w-6" />
+          <span class="font-semibold">Abmelden</span>
         </button>
-      </nav>
+      </div>
     </aside>
 
     <div class="flex-grow flex flex-col">

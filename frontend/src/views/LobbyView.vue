@@ -46,12 +46,12 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="bg-gray-100 min-h-screen font-sans">
+  <div class="bg-gray-100 min-h-screen">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
       <header class="flex flex-col sm:flex-row justify-between items-center mb-8">
         <div class="flex items-center gap-4 mb-4 sm:mb-0">
-          <img src="../assets/logo.svg" alt="Logo" class="h-16 w-auto">
+          <img src="../assets/logo.svg" alt="Logo" class="h-24 w-auto">
           <div class="text-2xl font-bold text-gray-800">Lobby</div>
         </div>
         <div class="flex items-center gap-4">

@@ -21,12 +21,12 @@ const maxRounds = 5;
 let timerInterval = null;
 
 const currentQuestion = ref({
-  item: { name: 'Monitor', icon: '🖥️' },
+  item: { name: 'Desktop PC', icon: '🖥️' },
   answers: [
-    { id: 'e1', icon: '🛜', text: 'WLAN' },
-    { id: 'e2', icon: '🔌', text: 'Netzstecker' },
-    { id: 'e3', icon: '📀', text: 'CD-Laufwerk' },
-    { id: 'e4', icon: '⌨️', text: 'Tastatur' },
+    { id: 'e1', icon: '🛜' },
+    { id: 'e2', icon: '🔌' },
+    { id: 'e3', icon: '📀' },
+    { id: 'e4', icon: '⌨️' },
   ],
   correctAnswers: ['e2']
 });
@@ -102,16 +102,15 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="bg-gray-100 min-h-screen flex flex-col p-2 sm:p-4 font-sans">
+  <div class="bg-gray-100 min-h-screen flex flex-col p-2 sm:p-4">
     
     <header class="w-full max-w-4xl mx-auto">
-      <div class="flex justify-between items-center mb-2">
-        <button @click="goBackToLobby" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors">
+      <div class="flex justify-center items-center mb-2 relative">
+        <button @click="goBackToLobby" class="absolute left-0 flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors">
           <ArrowUturnLeftIcon class="h-6 w-6" />
           <span class="hidden sm:inline">Zurück zur Lobby</span>
         </button>
-        <img src="../assets/logo.svg" alt="Wahr oder Watt Logo" class="h-12 sm:h-16 w-auto mx-auto">
-        <div class="w-24"></div> <!-- Spacer -->
+        <img src="../assets/logo.svg" alt="Wahr oder Watt Logo" class="h-20 sm:h-24 w-auto">
       </div>
       <div class="bg-white rounded-xl shadow-md p-2 sm:p-4 grid grid-cols-3 items-center gap-2 sm:gap-4">
         
