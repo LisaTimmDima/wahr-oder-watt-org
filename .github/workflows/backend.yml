@@ -1,0 +1,33 @@
+name: Maven build
+
+on:
+  push:
+    branches: [ "branch" ]
+    paths:
+      - backend/**
+  pull_request:
+    branches: [ "branch" ]
+    paths:
+    - backend/**
+
+jobs:
+  build-and-test:
+    name: Build and Test Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build and Test with Maven
+        # The 'verify' lifecycle phase runs all phases before it, including 'test' and 'package'.
+        # The '-B' flag runs Maven in non-interactive (batch) mode, which is best for CI.
+        run: mvn -B verify
+        working-directory: ./backend

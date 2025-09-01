@@ -33,7 +33,13 @@ out
 
 # Environment files
 .env
-.env.*.local
+.env.*
+backend/.env
+backend/.env.*
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+!backend/.env.example
 
 # OS files
 .DS_Store

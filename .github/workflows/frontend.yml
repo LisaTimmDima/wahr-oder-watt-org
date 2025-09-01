@@ -1,0 +1,52 @@
+name: Frontend ci
+
+
+on:
+  push:
+    branches: [ "branch" ]
+    paths:
+      - frontend/**
+  pull_request:
+    branches: [ "branch" ]
+    paths:
+      - frontend/**
+
+
+jobs:
+  lint-test-build:
+    name: Lint,test,build
+    runs-on: ubuntu-latest 
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Sets up Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' 
+          cache: 'npm' 
+          cache-dependency-path: frontend/package-lock.json
+
+      # Installs project dependencies
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./frontend
+
+      # Runs ESLint to check for linting errors
+      - name: Run ESLint
+        run: npm run lint
+        working-directory: ./frontend
+        continue-on-error: true
+
+        # Ensure your package.json has a "test" script like: "test": "vitest run"
+      - name: Run Vitest tests
+        id: test
+        run: npm test
+        working-directory: ./frontend
+
+      - name: Build application
+        if: steps.test.outcome == 'success'
+        run: npm run build
+        working-directory: ./frontend
