@@ -21,12 +21,12 @@ const maxRounds = 5;
 let timerInterval = null;
 
 const currentQuestion = ref({
-  item: { name: 'Desktop PC', icon: '🖥️' },
+  item: { name: 'Monitor', icon: '🖥️' },
   answers: [
-    { id: 'e1', icon: '🛜' },
-    { id: 'e2', icon: '🔌' },
-    { id: 'e3', icon: '📀' },
-    { id: 'e4', icon: '⌨️' },
+    { id: 'e1', icon: '🛜', text: 'WLAN' },
+    { id: 'e2', icon: '🔌', text: 'Netzstecker' },
+    { id: 'e3', icon: '📀', text: 'CD-Laufwerk' },
+    { id: 'e4', icon: '⌨️', text: 'Tastatur' },
   ],
   correctAnswers: ['e2']
 });
@@ -106,7 +106,7 @@ onUnmounted(() => {
     
     <header class="w-full max-w-4xl mx-auto">
       <div class="flex justify-center items-center mb-2 relative">
-        <button @click="goBackToLobby" class="absolute left-0 flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors">
+        <button @click="goBackToLobby" data-test="back-to-lobby-button" class="absolute left-0 flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors">
           <ArrowUturnLeftIcon class="h-6 w-6" />
           <span class="hidden sm:inline">Zurück zur Lobby</span>
         </button>
@@ -160,6 +160,7 @@ onUnmounted(() => {
           v-for="answer in currentQuestion.answers"
           :key="answer.id"
           @click="toggleAnswer(answer.id)"
+          :data-test="`answer-button-${answer.id}`"
           :class="[
             'p-4 rounded-2xl border-2 sm:border-4 transition-all duration-150',
             'flex flex-col items-center justify-center gap-2',
@@ -173,7 +174,7 @@ onUnmounted(() => {
         </button>
       </div>
 
-      <button @click="submitAnswers(false)" class="bg-blue-500 hover:bg-blue-600 text-white font-bold text-xl sm:text-2xl py-3 px-12 sm:py-4 sm:px-16 rounded-full shadow-md transition-transform transform hover:scale-105">
+      <button @click="submitAnswers(false)" data-test="submit-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold text-xl sm:text-2xl py-3 px-12 sm:py-4 sm:px-16 rounded-full shadow-md transition-transform transform hover:scale-105">
         OK
       </button>
 
