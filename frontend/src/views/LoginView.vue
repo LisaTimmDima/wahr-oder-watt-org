@@ -13,6 +13,9 @@ const adminPassword = ref('');
 const newPassword = ref('');
 const confirmPassword = ref('');
 const notificationMessage = ref('');
+const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.(com|de|net|org|info|io)$/;
+const isEmailValid = computed(() => emailRegex.test(email.value.trim()));
+
 
 const currentTitle = computed(() => {
   switch(mode.value) {
@@ -80,6 +83,10 @@ async function handleLogin() {
 }
 
 async function handleRegister() {
+  if (!isEmailValid.value) {
+    alert("Bitte geben Sie eine gültige E-Mail-Adresse ein.");
+    return;
+  }
   console.log(
     'Registrierungs-Versuch:',
     email.value,

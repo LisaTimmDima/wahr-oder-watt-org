@@ -5,8 +5,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Column;
 import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToOne;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -32,13 +33,9 @@ public class Highscore {
   /**
    * players ist die Liste der Benutzer, die diesen Highscore erreicht haben.
    */
-  @ManyToMany
-  @JoinTable(
-      name = "highscore_user",
-      joinColumns = @JoinColumn(name = "highscore_id"),
-      inverseJoinColumns = @JoinColumn(name = "user_id")
-  )
-  private List<User> players;
+  @OneToOne
+  @JoinColumn(name = "user_id", referencedColumnName = "id")
+  private User player;
 
   /**
    * score ist die erreichte Punktzahl des Benutzers.
