@@ -2,11 +2,11 @@ name: Maven build
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "branch" ]
     paths:
       - backend/**
   pull_request:
-    branches: [ "main" ]
+    branches: [ "branch" ]
     paths:
     - backend/**
 

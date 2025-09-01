@@ -2,7 +2,18 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches: [cicd]
+    branches: [branch]
+    paths:
+      - frontend/**
+      - backend/**
+      - Dockerfile
+  pull_request:
+    branches: [branch]
+    paths:
+      - frontend/**
+      - backend/**
+      - Dockerfile
+
 env:
     REGION: europe-west3
     GCP_PROJECT_ID: vibrant-sound-469408
