@@ -59,7 +59,7 @@ function showLobby() {
   @start-game="onGameStart"  @show-help="showHelp"
   @show-highscores="showHighscores"
 />
-  <AdminLayout v-else-if="currentView === 'admin'" />
+  <AdminLayout v-else-if="currentView === 'admin'" @go-to-lobby="showLobby" />
   
   <SpielView v-else-if="currentView === 'game'" :game-details="currentGameDetails" @show-lobby="showLobby" />
   
