@@ -1,18 +1,48 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { UserCircleIcon, ArrowUturnLeftIcon } from '@heroicons/vue/24/solid';
 
 const emit = defineEmits(['show-lobby']);
+const loading = ref(false);
+const loadError = ref(null);
+const highscores = ref([]);
+const loggedInUser = ref({ id: null, name: '' }); // Platzhalter für
+// den aktuell eingeloggten Benutzer
 
-// Mock data for the high scores
-const loggedInUser = ref({ name: 'Spieler 1', score: 1000 });
-const highscores = ref([
-  { rank: 1, name: 'Spieler 1', score: 1000 },
-  { rank: 2, name: 'Spieler 2', score: 900 },
-  { rank: 3, name: 'Spieler 3', score: 800 },
-  { rank: 4, name: 'Spieler 4', score: 700 },
-  { rank: 5, name: 'Spieler 5', score: 600 },
-]);
+function applyRanking(list) {
+  return [...list] // Kopie, um Seiteneffekte zu vermeiden
+      .sort((a, b) => b.score - a.score)
+      .map((h, i) => ({ ...h, rank: i + 1 }));
+}
+
+async function fetchHighscores(controller = new AbortController()) {
+  loading.value = true;
+  loadError.value = null;
+  try {
+    const resp = await fetch('/api/highscores', {
+      headers: { Accept: 'application/json' },
+      credentials: 'include',
+      signal: controller.signal
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    console.log('Highscores raw:', data);
+    const normalized = (Array.isArray(data) ? data : []).map(h => ({
+      name: h.username ?? h.userName ?? h.name ?? h.id ?? 'Unbekannt',
+      score: h.score ?? 0
+    }));
+    highscores.value = applyRanking(normalized);
+  } catch (e) {
+    loadError.value = e.message;
+    highscores.value = [];
+  } finally {
+    loading.value = false;
+  }
+}
+
+onMounted(() => {
+  fetchHighscores();
+});
 
 function goBackToLobby() {
   emit('show-lobby');
