@@ -13,7 +13,7 @@ const showNotifications = ref(false);
 const navigation = [
   { name: 'Dashboard', view: 'dashboard', icon: HomeIcon },
   { name: 'Benutzer verwalten', view: 'users', icon: UsersIcon },
-  { name: 'Items verwalten', view: 'items', icon: CubeIcon },
+  { name: 'Geräte verwalten', view: 'items', icon: CubeIcon },
 ];
 
 const notifications = ref([
