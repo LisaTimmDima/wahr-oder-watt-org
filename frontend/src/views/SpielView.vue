@@ -1,8 +1,9 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { UserCircleIcon, ClockIcon } from '@heroicons/vue/24/solid';
+import { UserCircleIcon, ClockIcon, ArrowUturnLeftIcon } from '@heroicons/vue/24/solid';
 
-// Empfängt die Spieldetails (Gegner & Level) von App.vue
+const emit = defineEmits(['show-lobby']);
+
 const props = defineProps({
   gameDetails: {
     type: Object,
@@ -10,31 +11,28 @@ const props = defineProps({
   }
 });
 
-// Spieler-Daten werden jetzt aus den props abgeleitet
 const loggedInPlayer = ref({ name: 'Spieler 1', score: 0 });
 const opponentPlayer = computed(() => props.gameDetails.opponent);
 const level = computed(() => props.gameDetails.level);
 
-// Zustand für die Spiel-Logik
 const timer = ref(0);
 const currentRound = ref(1);
 const maxRounds = 5;
 let timerInterval = null;
 
-// Mock-Frage
 const currentQuestion = ref({
   item: { name: 'Monitor', icon: '🖥️' },
   answers: [
-    { id: 'e1', icon: '🛜' },
-    { id: 'e2', icon: '🔌' },
-    { id: 'e3', icon: '📀' },
-    { id: 'e4', icon: '⌨️' },
+    { id: 'e1', icon: '🛜', text: 'WLAN' },
+    { id: 'e2', icon: '🔌', text: 'Netzstecker' },
+    { id: 'e3', icon: '📀', text: 'CD-Laufwerk' },
+    { id: 'e4', icon: '⌨️', text: 'Tastatur' },
   ],
-  correctAnswers: ['e2', 'e4']
+  correctAnswers: ['e2']
 });
 
-// Logik für das Auswählen von Antworten
 const selectedAnswers = ref([]);
+
 function toggleAnswer(answerId) {
   const index = selectedAnswers.value.indexOf(answerId);
   if (index === -1) {
@@ -43,6 +41,7 @@ function toggleAnswer(answerId) {
     selectedAnswers.value.splice(index, 1);
   }
 }
+
 const isSelected = computed(() => {
   return (answerId) => selectedAnswers.value.includes(answerId);
 });
@@ -65,18 +64,16 @@ function submitAnswers(isTimeout = false) {
 
   alert(`You scored ${scoreForRound} points in this round! Total score: ${loggedInPlayer.value.score}`);
 
-  // Reset for next round or end game
   if (currentRound.value < maxRounds) {
     currentRound.value++;
     selectedAnswers.value = [];
     startTimer();
   } else {
     alert(`Game Over! Final Score: ${loggedInPlayer.value.score}`);
-    // Redirect or show final score
+    // Handle end of game
   }
 }
 
-// Timer-Logik
 function startTimer() {
   clearInterval(timerInterval);
   timer.value = level.value === 1 ? 60 : 10;
@@ -89,9 +86,11 @@ function startTimer() {
   }, 1000);
 }
 
-// Lifecycle Hooks
+function goBackToLobby() {
+  emit('show-lobby');
+}
+
 onMounted(() => {
-  // Wir prüfen, ob die gameDetails vorhanden sind, bevor wir den Timer starten
   if (props.gameDetails) {
     startTimer();
   }
@@ -103,63 +102,83 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="bg-white min-h-screen flex flex-col p-4 sm:p-6 lg:p-8">
-    <div class="w-full max-w-5xl mx-auto flex flex-col flex-grow">
-      
-      <header class="grid grid-cols-3 items-center gap-4 mb-6">
-        <div class="flex items-center gap-3">
-          <UserCircleIcon class="h-10 w-10 text-gray-400" />
+  <div class="bg-gray-100 min-h-screen flex flex-col p-2 sm:p-4 font-sans">
+    
+    <header class="w-full max-w-4xl mx-auto">
+      <div class="flex justify-between items-center mb-2">
+        <button @click="goBackToLobby" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors">
+          <ArrowUturnLeftIcon class="h-6 w-6" />
+          <span class="hidden sm:inline">Zurück zur Lobby</span>
+        </button>
+        <img src="../assets/logo.svg" alt="Wahr oder Watt Logo" class="h-12 sm:h-16 w-auto mx-auto">
+        <div class="w-24"></div> <!-- Spacer -->
+      </div>
+      <div class="bg-white rounded-xl shadow-md p-2 sm:p-4 grid grid-cols-3 items-center gap-2 sm:gap-4">
+        
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div class="bg-gray-200 p-1 sm:p-2 rounded-full">
+            <UserCircleIcon class="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+          </div>
           <div>
-            <span class="text-xl font-semibold text-gray-800">{{ loggedInPlayer.name }}</span>
-            <div class="text-l font-bold text-gray-600">Score: {{ loggedInPlayer.score }}</div>
+            <h2 class="text-base sm:text-xl font-bold text-gray-800">{{ loggedInPlayer.name }}</h2>
+            <p class="text-sm sm:text-lg font-semibold text-blue-600">Score: {{ loggedInPlayer.score }}</p>
           </div>
         </div>
 
-        <div class="flex flex-col items-center justify-center">
-          <ClockIcon class="h-8 w-8 text-gray-500" />
-          <span class="text-4xl font-mono font-bold text-gray-900 tracking-wider">
-            00:{{ timer.toString().padStart(2, '0') }}
-          </span>
-          <div v-if="level === 1" class="text-sm font-semibold text-gray-500">Level 1: Gesamtzeit</div>
-          <div v-if="level === 2" class="text-sm font-semibold text-gray-500">Level 2: Runde {{ currentRound }} / {{ maxRounds }}</div>
+        <div class="text-center">
+          <div class="flex items-center justify-center gap-1 sm:gap-2">
+            <ClockIcon class="h-6 w-6 sm:h-8 sm:w-8 text-gray-500" />
+            <span class="text-2xl sm:text-4xl font-mono font-bold text-gray-800">{{ timer.toString().padStart(2, '0') }}s</span>
+          </div>
+          <div class="text-xs sm:text-sm font-semibold text-gray-600">
+              <div v-if="level === 1">Gesamtzeit</div>
+              <div v-if="level === 2">Runde {{ currentRound }} / {{ maxRounds }}</div>
+          </div>
         </div>
 
-        <div class="flex items-center justify-end gap-3">
-           <div class="text-right">
-             <img src="../assets/logo.svg" alt="Logo" class="h-10 ml-auto mb-1">
-             <span class="text-xl font-semibold text-gray-800">{{ opponentPlayer.name }}</span>
-           </div>
-          <UserCircleIcon class="h-10 w-10 text-gray-400" />
+        <div class="flex items-center justify-end gap-2 sm:gap-3">
+          <div class="text-right">
+            <h2 class="text-base sm:text-xl font-bold text-gray-800">{{ opponentPlayer.name }}</h2>
+            <p class="text-sm sm:text-lg font-semibold text-gray-500">Score: 0</p>
+          </div>
+          <div class="bg-gray-200 p-1 sm:p-2 rounded-full">
+            <UserCircleIcon class="h-6 w-6 sm:h-8 sm:w-8 text-gray-500" />
+          </div>
         </div>
-      </header>
+
+      </div>
+    </header>
+
+    <main class="w-full max-w-4xl mx-auto flex-grow flex flex-col items-center justify-center mt-4">
       
-      <main class="flex-grow flex flex-col items-center justify-center">
-        <div class="mb-10 text-9xl">
-          {{ currentQuestion.item.icon }}
-        </div>
-        <div class="w-full max-w-2xl grid grid-cols-2 gap-4 sm:gap-6">
-          <button
-            v-for="answer in currentQuestion.answers"
-            :key="answer.id"
-            @click="toggleAnswer(answer.id)"
-            :class="[
-              'p-6 rounded-xl border-2 transition-all duration-200',
-              'flex flex-col items-center justify-center gap-2',
-              isSelected(answer.id)
-                ? 'bg-blue-100 border-blue-500 shadow-lg scale-105'
-                : 'bg-gray-100 border-gray-200 hover:border-gray-400'
-            ]"
-          >
-            <span class="text-3xl font-bold">{{ answer.icon }}</span>
-            <span class="font-semibold">{{ answer.text }}</span>
-          </button>
-        </div>
-        <div class="mt-8">
-          <button @click="submitAnswers(false)" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-            OK
-          </button>
-        </div>
-      </main>
-    </div>
+      <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 text-center w-full">
+        <div class="text-6xl sm:text-7xl mb-2">{{ currentQuestion.item.icon }}</div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">{{ currentQuestion.item.name }}</h1>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 sm:gap-4 w-full mb-4 sm:mb-6">
+        <button
+          v-for="answer in currentQuestion.answers"
+          :key="answer.id"
+          @click="toggleAnswer(answer.id)"
+          :class="[
+            'p-4 rounded-2xl border-2 sm:border-4 transition-all duration-150',
+            'flex flex-col items-center justify-center gap-2',
+            isSelected(answer.id)
+              ? 'bg-blue-100 border-blue-500 shadow-md scale-105'
+              : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+          ]"
+        >
+          <span class="text-4xl sm:text-5xl">{{ answer.icon }}</span>
+          <span class="font-semibold text-sm sm:text-base text-gray-700">{{ answer.text }}</span>
+        </button>
+      </div>
+
+      <button @click="submitAnswers(false)" class="bg-blue-500 hover:bg-blue-600 text-white font-bold text-xl sm:text-2xl py-3 px-12 sm:py-4 sm:px-16 rounded-full shadow-md transition-transform transform hover:scale-105">
+        OK
+      </button>
+
+    </main>
+
   </div>
 </template>

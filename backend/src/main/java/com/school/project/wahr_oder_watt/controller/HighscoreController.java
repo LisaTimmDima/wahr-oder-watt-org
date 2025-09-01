@@ -5,6 +5,8 @@ import com.school.project.wahr_oder_watt.service.HighscoreService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.jpa.repository.Query;
+import com.school.project.wahr_oder_watt.dto.HighscoreDto;
 
 import java.util.List;
 
@@ -22,8 +24,8 @@ public class HighscoreController {
    * Gibt alle Highscores zurück.
    */
   @GetMapping
-  public ResponseEntity<List<Highscore>> getAllHighscores() {
-    return ResponseEntity.ok(highscoreService.findAll());
+  public List<HighscoreDto> all() {
+    return highscoreService.findAllDtosSortedByScoreDesc();
   }
 
   /**
