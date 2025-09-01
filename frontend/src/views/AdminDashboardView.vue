@@ -8,7 +8,6 @@ const stats = ref([
   { name: 'Gesamte Benutzer', value: 12, icon: UsersIcon, color: 'bg-blue-500' },
   { name: 'Gesamte Geräte', value: 2, icon: CubeIcon, color: 'bg-yellow-500' },
 ]);
-
 </script>
 
 <template>
