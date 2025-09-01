@@ -10,7 +10,7 @@ const faqs = ref([
   {
     id: 'spielregeln',
     question: 'Spielregeln',
-    answer: 'Bei „Wahr oder Watt?“ geht es um Wissen und Reaktionsgeschwindigkeit. In jeder Runde wird eine Aussage über einen IT-Gegenstand (Hardware, Software, Zubehör) und eine seiner möglichen Eigenschaften präsentiert. Die Spieler müssen blitzschnell entscheiden, ob diese Aussage der Wahrheit entspricht oder nicht. Der Name ist Programm: ist die Aussage wahr oder ist sie totaler Quatsch (Watt?!).'
+    answer: 'Bei <strong>„Wahr oder Watt?“</strong> geht es um Wissen und Reaktionsgeschwindigkeit. In jeder Runde wird eine Aussage über einen IT-Gegenstand (Hardware, Software, Zubehör) und eine seiner möglichen Eigenschaften präsentiert. Die Spieler müssen blitzschnell entscheiden, ob diese Aussage der Wahrheit entspricht oder nicht. <strong>Ist die Aussage Wahr oder ist sie totaler Quatsch (Watt?!).</strong>'
   },
   {
     id: 'spielziel',
@@ -20,7 +20,12 @@ const faqs = ref([
   {
     id: 'spielablauf',
     question: 'Spielablauf',
-    answer: 'Lobby & Spielstart: Alle Spieler loggen sich ein und versammeln sich in einer digitalen Lobby.'
+    answer: '<strong>Lobby & Spielstart:</strong> Alle Spieler loggen sich ein und versammeln sich in einer digitalen Lobby. <strong>Spielansicht:</strong> Auf dem Bildschirm aller Teilnehmer erscheint ein Bild eines Gegenstands (z. B. Desktop-PC). Jeder Gegenstand hat mehrere passende Eigenschaften. <strong>Beispiel 1:</strong> „Ein Desktop-PC könnte eine Tastatur haben. <strong>Beispiel 2:</strong> „Ein Smartphone hat einen Akku.“ <strong>Reaktion ist alles:</strong> Ein Countdown (z. B. 10 Sekunden) läuft ab. Innerhalb dieser Zeit müssen alle Spieler eine Entscheidung treffen und einen der vier möglichen Buttons drücken. Wer nicht rechtzeitig antwortet, erhält für diese Runde keine Punkte. <strong>Die Auflösung:</strong> Sobald die Zeit abgelaufen ist oder alle Spieler geantwortet haben, wird die Runde sofort ausgewertet: Das System zeigt die korrekte Antwort an (z. B. „FALSCH! Ein Desktop-PC hat keine beweglichen Teile.“). Die Spieler sehen, wer richtig und wer falsch lag. Die Punkte werden live vergeben und der aktuelle Spielstand wird angezeigt.'
+  },
+  {
+    id: 'spielmodi:',
+    question: 'Spielmodi',
+    answer: '<strong>Level 1:</strong> Speedrun 60 Sekunden Gesamtzeit, so viele Fragen wie möglich.<strong>Level 2:</strong> Runden-Duell 5 Runden, 10 Sekunden pro Runde.'
   }
 ]);
 
@@ -40,20 +45,20 @@ function goBackToLobby() {
       <h1 class="text-5xl font-extrabold text-gray-800 tracking-tight">Hilfe & FAQ</h1>
     </header>
 
-    <main class="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden divide-y divide-gray-200">
-      <div v-for="faq in faqs" :key="faq.id">
-        <button 
-          @click="toggleAccordion(faq.id)" 
-          class="w-full flex justify-between items-center p-6 text-left hover:bg-gray-50 focus:outline-none"
-        >
-          <h2 class="text-2xl font-semibold text-gray-800">{{ faq.question }}</h2>
-          <ChevronDownIcon :class="['h-8 w-8 text-gray-500 transition-transform transform', openAccordion === faq.id ? '-rotate-180' : '']" />
-        </button>
-        <div v-show="openAccordion === faq.id" class="px-6 pb-6 text-gray-700 text-lg">
-          <p>{{ faq.answer }}</p>
-        </div>
-      </div>
-    </main>
+  <main class="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden divide-y divide-gray-200">
+  <div v-for="faq in faqs" :key="faq.id">
+    <button 
+      @click="toggleAccordion(faq.id)" 
+      class="w-full flex justify-between items-center p-6 text-left hover:bg-gray-50 focus:outline-none"
+    >
+      <h2 class="text-2xl font-semibold text-gray-800">{{ faq.question }}</h2>
+      <ChevronDownIcon :class="['h-8 w-8 text-gray-500 transition-transform transform', openAccordion === faq.id ? '-rotate-180' : '']" />
+    </button>
+    <div v-show="openAccordion === faq.id" class="px-6 pb-6 text-gray-700 text-lg">
+      <p v-html="faq.answer"></p>
+    </div>
+  </div>
+</main>
 
     <footer class="w-full max-w-4xl mx-auto mt-12 text-center">
       <div class="bg-blue-600 text-white rounded-2xl shadow-xl p-4 max-w-2xl mx-auto">

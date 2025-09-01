@@ -104,27 +104,21 @@ async function handleRegister() {
       body: JSON.stringify(payload)
     });
     if (!response.ok) {
-        // Bei einem Fehler die Server-Nachricht anzeigen, falls vorhanden
+        // Bei einem Fehler die Server-Nachricht anzeigen
         const errorData = await response.json();
         throw new Error(errorData.message || 'Registrierung fehlgeschlagen');
     }
 
-    // ANPASSUNG BEGINNT HIER
-    // 1. Erfolgsmeldung für die Login-Ansicht setzen
+    // Erfolgsmeldung für die Login-Ansicht setzen
     notificationMessage.value = "Dein Konto wurde erfolgreich erstellt. Du kannst dich jetzt anmelden!";
 
-    // 2. Zur Login-Ansicht wechseln
+    // Zur Login-Ansicht wechseln
     mode.value = 'user-login';
 
-    // 3. Felder leeren für eine saubere Ansicht
+    // Felder leeren für eine saubere Ansicht
     email.value = '';
     playerUsername.value = '';
     password.value = '';
-
-    // Der folgende Teil wird entfernt, da der Benutzer sich selbst einloggen soll
-    // const token = await response.text();
-    // localStorage.setItem('jwt', token);
-    // ANPASSUNG ENDET HIER
 
   } catch (error) {
     alert('Fehler: ' + error.message);
