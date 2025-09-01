@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { UsersIcon, CubeIcon, BellIcon } from '@heroicons/vue/24/outline';
 
+
 const stats = ref([
   { name: 'Benutzer zur Freischaltung', value: 1, icon: BellIcon, color: 'bg-red-500' },
   { name: 'Gesamte Benutzer', value: 12, icon: UsersIcon, color: 'bg-blue-500' },
