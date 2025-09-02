@@ -9,19 +9,14 @@ import lombok.Setter;
  * DTO for user registration requests.
  */
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
-public class RegisterRequest {
-  /**
-   * The username of the user.
-   */
-  private String username;
+public class LoginRequest {
+    /**
+     * The email of the user.
+     */
+    private String email;
 
-  /**
-   * The password of the user.
-   */
-  private String password;
-
-  /**
-   * The email of the user.
-   */
-  private String email;
+    /**
+     * The password of the user.
+     */
+    private String password;
 }

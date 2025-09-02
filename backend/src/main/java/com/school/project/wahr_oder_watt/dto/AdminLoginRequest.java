@@ -6,10 +6,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * DTO for user registration requests.
+ * DTO for admin registration requests.
  */
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
-public class RegisterRequest {
+public class AdminLoginRequest {
   /**
    * The username of the user.
    */
@@ -19,9 +19,4 @@ public class RegisterRequest {
    * The password of the user.
    */
   private String password;
-
-  /**
-   * The email of the user.
-   */
-  private String email;
 }

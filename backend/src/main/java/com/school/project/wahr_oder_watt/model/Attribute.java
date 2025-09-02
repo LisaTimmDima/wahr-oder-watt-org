@@ -10,12 +10,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import jakarta.persistence.Table;
 
 /**
  * Die Klasse Attribute repräsentiert ein Attribut mit einem Bild und einer Beschreibung.
  * Jedes Attribut hat eine eindeutige ID, eine URL zu einem Bild und eine textuelle Beschreibung.
  */
 @Entity
+@Table(name = "attribute")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class Attribute {
 

@@ -1,0 +1,23 @@
+.env
+.env.*
+backend/.env
+backend/.env.*
+frontend/.env
+frontend/.env.*
+
+# Exclude node_modules directory
+node_modules
+
+# Exclude all log files
+*.log
+
+# Ignore build directories
+/build
+/dist
+
+# Ignore Docker-related files
+Dockerfile*
+.dockerignore
+
+# Ignore vscode-related files
+.vscode/

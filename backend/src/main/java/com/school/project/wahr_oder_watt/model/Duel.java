@@ -15,12 +15,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import jakarta.persistence.Table;
 
 /**
  * Die Klasse Duel repräsentiert ein Duell zwischen zwei Spielern.
  * Ein Duell besteht aus mehreren Runden und hat einen bestimmten Modus und Status.
  */
 @Entity
+@Table(name = "duel")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class Duel {
   /**
