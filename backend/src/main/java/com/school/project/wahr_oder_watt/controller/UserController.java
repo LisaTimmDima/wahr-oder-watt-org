@@ -2,9 +2,18 @@ package com.school.project.wahr_oder_watt.controller;
 
 import com.school.project.wahr_oder_watt.model.User;
 import com.school.project.wahr_oder_watt.service.UserService;
+import com.school.project.wahr_oder_watt.dto.UserDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -25,6 +34,32 @@ public class UserController {
   public ResponseEntity<List<User>> getAllUsers() {
     return ResponseEntity.ok(userService.findAll());
   }
+
+  @GetMapping("/available")
+  public ResponseEntity<List<User>> getAvailableUsers() {
+    return ResponseEntity.ok(
+        userService.findAll().stream()
+            .filter(User::isEnabled) // Voraussetzung: Methode/Flag existiert
+            .toList()
+    );
+  }
+/**
+   * Gibt den aktuell angemeldeten Benutzer zurück.
+   */
+@GetMapping("/me")
+@ResponseStatus(HttpStatus.OK)
+public Map<String, Object> me(Authentication authentication) {
+  Map<String, Object> dto = new HashMap<>();
+  if (authentication == null) {
+    dto.put("id", 0);
+    dto.put("username", "unknown");
+    return dto;
+  }
+  // TODO: Echten User aus DB laden falls nötig
+  dto.put("id", 1L);
+  dto.put("username", authentication.getName());
+  return dto;
+}
 
   /**
    * Gibt einen Benutzer anhand der ID zurück.

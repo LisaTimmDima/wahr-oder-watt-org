@@ -169,7 +169,7 @@ async function handleRegister() {
          <button @click="mode = 'user-login'" class="w-full bg-gray-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-700 transition-colors">Zurück zur Anmeldung</button>
          <button @click="mode = 'reset-password'" class="mt-4 text-xs text-gray-400 underline">(Entwickler-Shortcut: Passwort jetzt zurücksetzen)</button>
       </div>
-      
+
       <form v-else-if="mode === 'reset-password'" @submit.prevent="handlePasswordReset">
         <p class="text-center text-gray-600 mb-6">Ihr neues Passwort muss sich von Ihrem bisherigen Passwort unterscheiden und mindestens 8 Zeichen lang sein.</p>
         <div class="mb-4">

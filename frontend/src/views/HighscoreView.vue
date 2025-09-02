@@ -19,7 +19,7 @@ async function fetchHighscores(controller = new AbortController()) {
   loading.value = true;
   loadError.value = null;
   try {
-    const resp = await fetch('/api/highscores', {
+    const resp = await fetch('/api/auth/highscores', {
       headers: { Accept: 'application/json' },
       credentials: 'include',
       signal: controller.signal

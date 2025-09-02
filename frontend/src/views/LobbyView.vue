@@ -3,10 +3,18 @@ import { ref, onMounted } from 'vue';
 import { UserCircleIcon, TrophyIcon, QuestionMarkCircleIcon, ArrowRightOnRectangleIcon, UsersIcon, ChevronRightIcon } from '@heroicons/vue/24/solid';
 
 const emit = defineEmits(['start-game', 'show-help', 'show-highscores'])
-
-const loggedInUser = ref({ id: 1, name: 'Spieler 1' });
+const loggedInUser = ref({ id: 0, name: 'Lädt...' });
 const availablePlayers = ref([]);
 const selectedLevel = ref(1);
+const loading = ref(false);
+const error = ref(null);
+
+
+async function fetchCurrentUser() {
+  const resp = await fetch('/api/users/me', { headers: { 'Accept': 'application/json' } });
+  if (!resp.ok) throw new Error('Fehler beim Laden der Benutzer');
+  return await resp.json();
+}
 
 function challengePlayer(player) {
   emit('start-game', { opponent: player, level: selectedLevel.value });
@@ -25,23 +33,40 @@ function logout() {
   window.location.href = '/login';
 }
 
-async function fetchAvailablePlayers() {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve([
-        { id: 2, name: 'Spieler 2' },
-        { id: 3, name: 'Spieler 3' },
-        { id: 4, name: 'Spieler 4' },
-        { id: 5, name: 'Spieler 5' },
-        { id: 6, name: 'Spieler 6' },
-        { id: 7, name: 'Spieler 7' },
-      ]);
-    }, 500);
-  });
+  async function fetchUsers() {
+  const resp = await fetch('/api/users', { headers: { 'Accept': 'application/json' } });
+  if (!resp.ok) throw new Error('Fehler beim Laden der Benutzer');
+  return await resp.json();
 }
 
 onMounted(async () => {
-  availablePlayers.value = await fetchAvailablePlayers();
+  loading.value = true;
+  try {
+    // Aktuellen User laden (Backend) mit Fallback auf localStorage
+    try {
+      const me = await fetchCurrentUser();
+      loggedInUser.value = {
+        id: me.id,
+        name: me.username,
+      };
+    } catch (e) {
+      loggedInUser.value = {
+        id: Number(localStorage.getItem('currentUserId')),
+        name: localStorage.getItem('currentUsername')
+      };
+    }
+    const all = await fetchUsers();
+    availablePlayers.value = all
+        .filter(u => u.id !== loggedInUser.value.id)
+        .map(u => ({
+          id: u.id,
+          name: u.username,
+        }));
+  } catch (e) {
+    error.value = e.message;
+  } finally {
+    loading.value = false;
+  }
 });
 </script>
 
@@ -74,16 +99,16 @@ onMounted(async () => {
 
         <div class="lg:col-span-1 bg-white rounded-2xl shadow-lg p-6">
           <h2 class="text-2xl font-bold text-gray-800 mb-6">Spieleinstellungen</h2>
-          
+
           <div class="space-y-4">
-            <div 
+            <div
               @click="selectedLevel = 1"
               :class="['p-4 rounded-xl border-2 cursor-pointer transition-all', selectedLevel === 1 ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300']"
             >
               <h3 class="font-bold text-lg text-gray-800">Level 1: Speedrun</h3>
               <p class="text-gray-600 text-sm">60 Sekunden Gesamtzeit, so viele Fragen wie möglich.</p>
             </div>
-            <div 
+            <div
               @click="selectedLevel = 2"
               :class="['p-4 rounded-xl border-2 cursor-pointer transition-all', selectedLevel === 2 ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300']"
             >

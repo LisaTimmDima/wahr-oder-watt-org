@@ -1,74 +1,55 @@
 package com.school.project.wahr_oder_watt.config;
 
-import com.school.project.wahr_oder_watt.security.CustomUserDetailsService;
-import com.school.project.wahr_oder_watt.security.JwtAuthenticationFilter;
-import com.school.project.wahr_oder_watt.security.JwtUtil;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-/**
- * Security configuration class for setting up authentication and authorization.
- */
 @Configuration
-@RequiredArgsConstructor
 public class SecurityConfig {
 
-  private final CustomUserDetailsService userDetailsService;
-  private final JwtUtil jwtUtil;
+  // Falls noch kein UserDetailsService existiert, hier (Platzhalter) definieren oder eigenen Bean belassen.
+  // @Bean
+  // public UserDetailsService userDetailsService() { ... }
 
-  /**
-   * Bean for password encoding using BCrypt.
-   *
-   * @return BCryptPasswordEncoder instance
-   */
   @Bean
-  public BCryptPasswordEncoder passwordEncoder() {
+  public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
 
-  /**
-   * Bean for AuthenticationManager.
-   *
-   * @param http HttpSecurity instance
-   * @return AuthenticationManager instance
-   * @throws Exception if an error occurs during configuration
-   */
   @Bean
-  public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-    AuthenticationManagerBuilder builder = http.getSharedObject(AuthenticationManagerBuilder.class);
-    builder.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
-    return builder.build();
+  public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService,
+      PasswordEncoder passwordEncoder) {
+    DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+    provider.setUserDetailsService(userDetailsService);
+    provider.setPasswordEncoder(passwordEncoder);
+    return provider;
   }
 
-  /**
-   * Configures the security filter chain.
-   *
-   * @param http HttpSecurity instance
-   * @return SecurityFilterChain instance
-   * @throws Exception if an error occurs during configuration
-   */
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  public AuthenticationManager authenticationManager(AuthenticationConfiguration cfg) throws Exception {
+    return cfg.getAuthenticationManager();
+  }
+
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http,
+      AuthenticationProvider authenticationProvider) throws Exception {
     http
         .csrf(csrf -> csrf.disable())
-        .sessionManagement(
-            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authenticationProvider(authenticationProvider)
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/api/**").permitAll()
+            .requestMatchers("/auth/**").permitAll()
             .anyRequest().authenticated()
         )
-        .addFilterBefore(
-            new JwtAuthenticationFilter(jwtUtil, userDetailsService),
-            UsernamePasswordAuthenticationFilter.class
-        );
+        .httpBasic(Customizer.withDefaults());
     return http.build();
   }
 }
