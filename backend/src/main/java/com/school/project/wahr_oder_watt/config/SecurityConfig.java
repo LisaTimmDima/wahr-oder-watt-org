@@ -1,24 +1,24 @@
 package com.school.project.wahr_oder_watt.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.http.SessionCreationPolicy;
 
 @Configuration
 public class SecurityConfig {
-
-  // Falls noch kein UserDetailsService existiert, hier (Platzhalter) definieren oder eigenen Bean belassen.
-  // @Bean
-  // public UserDetailsService userDetailsService() { ... }
 
   @Bean
   public PasswordEncoder passwordEncoder() {
@@ -28,10 +28,10 @@ public class SecurityConfig {
   @Bean
   public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService,
       PasswordEncoder passwordEncoder) {
-    DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-    provider.setUserDetailsService(userDetailsService);
-    provider.setPasswordEncoder(passwordEncoder);
-    return provider;
+    DaoAuthenticationProvider p = new DaoAuthenticationProvider();
+    p.setUserDetailsService(userDetailsService);
+    p.setPasswordEncoder(passwordEncoder);
+    return p;
   }
 
   @Bean
@@ -40,16 +40,29 @@ public class SecurityConfig {
   }
 
   @Bean
+  public AuthenticationEntryPoint restAuthenticationEntryPoint() {
+    return (request, response, ex) -> {
+      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      response.setContentType("application/json");
+      response.getWriter().write("{\"error\":\"Unauthorized\"}");
+    };
+  }
+
+  @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http,
-      AuthenticationProvider authenticationProvider) throws Exception {
+      AuthenticationProvider authenticationProvider,
+      AuthenticationEntryPoint entryPoint) throws Exception {
     http
-        .csrf(csrf -> csrf.disable())
+        .csrf(AbstractHttpConfigurer::disable)
+        .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authenticationProvider(authenticationProvider)
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/auth/**").permitAll()
+            .requestMatchers("/auth/**", "/api/auth/**").permitAll()
             .anyRequest().authenticated()
         )
-        .httpBasic(Customizer.withDefaults());
+        .httpBasic(AbstractHttpConfigurer::disable)
+        .formLogin(AbstractHttpConfigurer::disable)
+        .exceptionHandling(ex -> ex.authenticationEntryPoint(entryPoint));
     return http.build();
   }
 }

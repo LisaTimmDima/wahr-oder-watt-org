@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import {ref, onMounted, computed} from 'vue';
 import { UserCircleIcon, TrophyIcon, QuestionMarkCircleIcon, ArrowRightOnRectangleIcon, UsersIcon, ChevronRightIcon } from '@heroicons/vue/24/solid';
 
 const emit = defineEmits(['start-game', 'show-help', 'show-highscores'])
@@ -8,10 +8,10 @@ const availablePlayers = ref([]);
 const selectedLevel = ref(1);
 const loading = ref(false);
 const error = ref(null);
-
+const token = computed(() => localStorage.getItem('jwt'));
 
 async function fetchCurrentUser() {
-  const resp = await fetch('/api/users/me', { headers: { 'Accept': 'application/json' } });
+  const resp = await fetch('/api/users/me', { headers: { 'Accept': 'application/json', token } });
   if (!resp.ok) throw new Error('Fehler beim Laden der Benutzer');
   return await resp.json();
 }
@@ -29,12 +29,14 @@ function onHighscoresClick() {
 }
 
 function logout() {
-  localStorage.removeItem('token');
+  localStorage.removeItem(token);
+  localStorage.removeItem('currentUserId');
+  localStorage.removeItem('currentUsername');
   window.location.href = '/login';
 }
 
   async function fetchUsers() {
-  const resp = await fetch('/api/users', { headers: { 'Accept': 'application/json' } });
+  const resp = await fetch('/api/users', { headers: { 'Accept': 'application/json', token } });
   if (!resp.ok) throw new Error('Fehler beim Laden der Benutzer');
   return await resp.json();
 }

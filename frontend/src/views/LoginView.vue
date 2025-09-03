@@ -5,6 +5,7 @@ import { EnvelopeIcon, LockClosedIcon, UserIcon } from '@heroicons/vue/24/solid'
 const emit = defineEmits(['login-successful', 'admin-login-successful']);
 const mode = ref('user-login');
 
+const errorMessage = ref('');
 const email = ref('');
 const playerUsername = ref('');
 const password = ref('');
@@ -17,6 +18,13 @@ const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.(com|de|net|org|info|io)$
 const isEmailValid = computed(() => emailRegex.test(email.value.trim()));
 
 
+function resetMessages() {
+  errorMessage.value = '';
+  // notificationMessage nur leeren, wenn sinnvoll:
+  // notificationMessage.value = '';
+}
+
+
 const currentTitle = computed(() => {
   switch(mode.value) {
     case 'forgot-password': return 'Passwort vergessen?';
@@ -26,6 +34,7 @@ const currentTitle = computed(() => {
     default: return 'Wahr oder Watt?';
   }
 });
+
 
 function handleForgotPasswordRequest() {
   console.log('Passwort-Reset angefordert für:', email.value);
@@ -47,18 +56,17 @@ function handlePasswordReset() {
 }
 
 async function handleLogin() {
+  resetMessages();
   const url = '/api/auth/login';
   const urladmin = '/api/auth/login_admin';
   let payload;
-
   try {
     if (mode.value === 'user-login') {
       payload = { email: email.value, password: password.value };
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+        headers: { 'Content-Type': 'application/json' }
+        , body: JSON.stringify(payload) });
       if (!response.ok) throw new Error('Login fehlgeschlagen');
       const token = await response.text();
       localStorage.setItem('jwt', token);
@@ -67,18 +75,15 @@ async function handleLogin() {
       payload = { username: adminLoginName.value, password: adminPassword.value };
       const response = await fetch(urladmin, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+        headers: { 'Content-Type': 'application/json' }
+        , body: JSON.stringify(payload) });
       if (!response.ok) throw new Error('Login fehlgeschlagen');
       const token = await response.text();
       localStorage.setItem('jwt', token);
       emit('admin-login-successful');
-    } else {
-      return;
     }
-  } catch (error) {
-    alert('Fehler: ' + error.message);
+  } catch (e) {
+    errorMessage.value = e.message || 'Unbekannter Fehler';
   }
 }
 
@@ -147,6 +152,15 @@ async function handleRegister() {
         <img src="../assets/logo.svg" alt="Wahr oder Watt?" class="mx-auto h-40 mb-4">
         <h1 class="text-2xl font-bold text-gray-800">{{ currentTitle }}</h1>
       </div>
+
+      <!-- Meldungsblock hier einfügen -->
+      <div v-if="errorMessage" class="mb-4 rounded-md bg-red-100 px-4 py-3 text-sm text-red-700">
+        {{ errorMessage }}
+      </div>
+      <div v-if="notificationMessage" class="mb-4 rounded-md bg-green-100 px-4 py-3 text-sm text-green-700">
+        {{ notificationMessage }}
+      </div>
+
 
       <form v-if="mode === 'forgot-password'" @submit.prevent="handleForgotPasswordRequest">
         <p class="text-center text-gray-600 mb-6">Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Link zum Zurücksetzen Ihres Passworts.</p>

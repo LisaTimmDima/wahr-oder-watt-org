@@ -19,7 +19,7 @@ async function fetchHighscores(controller = new AbortController()) {
   loading.value = true;
   loadError.value = null;
   try {
-    const resp = await fetch('/api/auth/highscores', {
+    const resp = await fetch('/api/highscores', {
       headers: { Accept: 'application/json' },
       credentials: 'include',
       signal: controller.signal
@@ -62,12 +62,12 @@ function goBackToLobby() {
         <div>User</div>
         <div class="text-right">Score</div>
       </div>
-      
+
       <ul>
-        <li 
-          v-for="(entry, index) in highscores" 
-          :key="entry.name"
-          :class="['grid grid-cols-3 gap-4 items-center p-4 transition-colors', 
+        <li
+            v-for="(entry, index) in highscores"
+            :key="entry.name"
+            :class="['grid grid-cols-3 gap-4 items-center p-4 transition-colors',
                    loggedInUser.name === entry.name ? 'bg-blue-100 font-bold' : 'hover:bg-gray-50',
                    index < highscores.length - 1 ? 'border-b border-gray-200' : '']"
         >
@@ -82,9 +82,9 @@ function goBackToLobby() {
     </main>
 
     <footer class="w-full max-w-2xl mx-auto mt-8 text-center">
-      <button 
-        @click="goBackToLobby" 
-        class="inline-flex items-center gap-2 bg-white text-gray-800 font-bold py-3 px-8 rounded-full shadow-md hover:bg-gray-200 transition-transform transform hover:-translate-y-1"
+      <button
+          @click="goBackToLobby"
+          class="inline-flex items-center gap-2 bg-white text-gray-800 font-bold py-3 px-8 rounded-full shadow-md hover:bg-gray-200 transition-transform transform hover:-translate-y-1"
       >
         <ArrowUturnLeftIcon class="h-5 w-5" />
         <span>Zurück zur Lobby</span>
