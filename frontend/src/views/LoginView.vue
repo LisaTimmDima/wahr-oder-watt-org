@@ -6,8 +6,7 @@
 // ==================================================================================
 
 // import: Lädt Vue-Funktionen (ref, computed) und andere Komponenten (Icons).
-// BARRIEREFREIHEIT: nextTick wird importiert, um den Fokus nach DOM-Aktualisierungen zu verwalten.
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed } from 'vue';
 import { EnvelopeIcon, LockClosedIcon, UserIcon } from '@heroicons/vue/24/solid';
 
 // ==================================================================================
@@ -44,14 +43,8 @@ const confirmPassword = ref('');
 const notificationMessage = ref('');
 const errorMessage = ref('');
 
-// BARRIEREFREIHEIT: Template-Refs zur Verwaltung des Fokus auf Formularfeldern und Fehlermeldungen.
-const userEmailInput = ref(null);
-const adminLoginInput = ref(null);
-const registerEmailInput = ref(null);
-const forgotEmailInput = ref(null);
-const newPasswordInput = ref(null);
-const errorAlert = ref(null);
-
+// BARRIEREFREIHEIT: Reaktive Variable für die Basisschriftgröße.
+const baseFontSize = ref(16);
 
 // ==================================================================================
 // Computed Properties: Leiten Werte von reaktiven Variablen ab und aktualisieren sich effizient selbst.
@@ -68,19 +61,22 @@ const currentTitle = computed(() => {
   }
 });
 
+// BARRIEREFREIHEIT: Berechnete Eigenschaft, die ein Style-Objekt für die dynamische Schriftgröße zurückgibt.
+const containerStyle = computed(() => ({
+  fontSize: `${baseFontSize.value}px`
+}));
+
 // ==================================================================================
 // Methoden: Funktionen zur Handhabung von Benutzerinteraktionen und Geschäftslogik.
 // ==================================================================================
 
 /**
  * @function setErrorMessage
- * @author Lisa (modified for accessibility)
- * @description Sets an error message and focuses the error alert for screen readers.
+ * @author Lisa
+ * @description Sets an error message.
  */
-async function setErrorMessage(message) {
+function setErrorMessage(message) {
   errorMessage.value = message;
-  await nextTick();
-  errorAlert.value?.focus();
 }
 
 /**
@@ -95,11 +91,11 @@ function clearMessages() {
 
 /**
  * @function switchMode
- * @author Lisa (modified for accessibility)
- * @description Wechselt den Anzeigemodus und setzt den Fokus auf das erste Feld des neuen Formulars.
+ * @author Lisa
+ * @description Wechselt den Anzeigemodus.
  * @param {string} newMode - Der neue Anzeigemodus, der aktiviert werden soll.
  */
-async function switchMode(newMode) {
+function switchMode(newMode) {
   mode.value = newMode;
   email.value = '';
   playerUsername.value = '';
@@ -109,26 +105,6 @@ async function switchMode(newMode) {
   newPassword.value = '';
   confirmPassword.value = '';
   clearMessages();
-
-  // BARRIEREFREIHEIT: Auf die DOM-Aktualisierung warten, dann den Fokus in den neuen Kontext verschieben.
-  await nextTick();
-  switch (newMode) {
-    case VIEW_MODES.USER_LOGIN:
-      userEmailInput.value?.focus();
-      break;
-    case VIEW_MODES.ADMIN_LOGIN:
-      adminLoginInput.value?.focus();
-      break;
-    case VIEW_MODES.REGISTER:
-      registerEmailInput.value?.focus();
-      break;
-    case VIEW_MODES.FORGOT_PASSWORD:
-      forgotEmailInput.value?.focus();
-      break;
-    case VIEW_MODES.RESET_PASSWORD:
-      newPasswordInput.value?.focus();
-      break;
-  }
 }
 
 /**
@@ -147,19 +123,19 @@ function handleForgotPasswordRequest() {
  * @author Lisa
  * @description Behandelt das Zurücksetzen des Passworts mit Validierung.
  */
-async function handlePasswordReset() {
+function handlePasswordReset() {
   clearMessages();
   if (newPassword.value !== confirmPassword.value) {
-    await setErrorMessage("Die Passwörter stimmen nicht überein!");
+    setErrorMessage("Die Passwörter stimmen nicht überein!");
     return;
   }
   if (newPassword.value.length < 8) {
-    await setErrorMessage("Das Passwort muss mindestens 8 Zeichen lang sein.");
+    setErrorMessage("Das Passwort muss mindestens 8 Zeichen lang sein.");
     return;
   }
   console.log('Neues Passwort wird gesetzt:', newPassword.value);
   notificationMessage.value = "Ihr Passwort wurde erfolgreich zurückgesetzt!";
-  await switchMode(VIEW_MODES.USER_LOGIN);
+  switchMode(VIEW_MODES.USER_LOGIN);
 }
 
 /**
@@ -204,7 +180,7 @@ async function handleLogin() {
     localStorage.setItem('jwt', token);
     emit(successEvent);
   } catch (error) {
-    await setErrorMessage(error.message);
+    setErrorMessage(error.message);
     console.error('Fehler bei der Anmeldung:', error);
   }
 }
@@ -217,11 +193,11 @@ async function handleLogin() {
 async function handleRegister() {
   clearMessages();
   if (!isEmailValid.value) {
-    await setErrorMessage("Bitte geben Sie eine gültige E-Mail-Adresse ein.");
+    setErrorMessage("Bitte geben Sie eine gültige E-Mail-Adresse ein.");
     return;
   }
   if (password.value.length < 8) {
-    await setErrorMessage("Das Passwort muss mindestens 8 Zeichen lang sein.");
+    setErrorMessage("Das Passwort muss mindestens 8 Zeichen lang sein.");
     return;
   }
   const payload = {
@@ -240,12 +216,20 @@ async function handleRegister() {
       throw new Error(errorData.message || 'Registrierung fehlgeschlagen.');
     }
     notificationMessage.value = "Dein Konto wurde erfolgreich erstellt. Du kannst dich jetzt anmelden!";
-    await switchMode(VIEW_MODES.USER_LOGIN);
+    switchMode(VIEW_MODES.USER_LOGIN);
     email.value = payload.email;
   } catch (error) {
-    await setErrorMessage(error.message);
+    setErrorMessage(error.message);
     console.error('Fehler bei der Registrierung:', error);
   }
+}
+
+// BARRIEREFREIHEIT: Methoden zur Anpassung der Schriftgröße.
+function increaseFontSize() {
+  baseFontSize.value += 2;
+}
+function decreaseFontSize() {
+  baseFontSize.value -= 2;
 }
 </script>
 
@@ -258,31 +242,30 @@ async function handleRegister() {
     - :class:        Bindet Klassen dynamisch basierend auf reaktiven Daten.
     - {{ ... }}:      Gibt den Wert einer Variable als Text aus (Interpolation).
   -->
-  <!-- BARRIEREFREIHEIT: div zu main geändert für eine semantische Landmark. -->
-  <main class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-gray-100 min-h-screen flex items-center justify-center p-4" :style="containerStyle">
     <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+
+      <!-- BARRIEREFREIHEIT: Steuerelemente zur Anpassung der Schriftgröße. -->
+      <div class="text-right mb-4">
+        <span class="text-sm text-gray-600 mr-2">Schriftgröße:</span>
+        <button @click="decreaseFontSize" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">-</button>
+        <button @click="increaseFontSize" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300 ml-1">+</button>
+      </div>
 
       <div class="text-center mb-8">
         <img src="../assets/logo.svg" alt="Wahr oder Watt?" class="mx-auto h-40 mb-4">
         <h1 class="text-2xl font-bold text-gray-800">{{ currentTitle }}</h1>
       </div>
 
-      <!-- BARRIEREFREIHEIT: aria-live und tabindex hinzugefügt, um Meldungen fokussierbar zu machen. -->
       <div 
         v-if="notificationMessage" 
         class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-md" 
-        role="alert"
-        aria-live="assertive"
       >
         <p>{{ notificationMessage }}</p>
       </div>
       <div 
         v-if="errorMessage" 
-        ref="errorAlert"
-        tabindex="-1"
-        class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" 
-        role="alert"
-        aria-live="assertive"
+        class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md" 
       >
         <p>{{ errorMessage }}</p>
       </div>
@@ -293,10 +276,8 @@ async function handleRegister() {
         <div class="mb-6">
           <label for="forgot-email" class="block text-sm font-medium text-gray-700">Email</label>
           <div class="mt-1 relative">
-            <!-- BARRIEREFREIHEIT: Dekoratives Icon wird für Screenreader versteckt. -->
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3" aria-hidden="true"><EnvelopeIcon class="h-5 w-5 text-gray-400" /></span>
-            <!-- BARRIEREFREIHEIT: Ref für Fokus-Management und autocomplete-Attribut hinzugefügt. -->
-            <input ref="forgotEmailInput" v-model="email" type="email" id="forgot-email" autocomplete="email" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="email@address.com" required>
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3"><EnvelopeIcon class="h-5 w-5 text-gray-400" /></span>
+            <input v-model="email" type="email" id="forgot-email" autocomplete="email" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="email@address.com" required>
           </div>
         </div>
         <button type="submit" class="w-full bg-gray-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-700 transition-colors">Passwort zurücksetzen</button>
@@ -319,16 +300,14 @@ async function handleRegister() {
         <div class="mb-4">
           <label for="new-password" class="block text-sm font-medium text-gray-700">Neues Passwort</label>
           <div class="mt-1 relative">
-             <span class="absolute inset-y-0 left-0 flex items-center pl-3" aria-hidden="true"><LockClosedIcon class="h-5 w-5 text-gray-400" /></span>
-             <!-- BARRIEREFREIHEIT: Ref für Fokus-Management und autocomplete-Attribut hinzugefügt. -->
-            <input ref="newPasswordInput" v-model="newPassword" type="password" id="new-password" autocomplete="new-password" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="••••••••••" required>
+             <span class="absolute inset-y-0 left-0 flex items-center pl-3"><LockClosedIcon class="h-5 w-5 text-gray-400" /></span>
+            <input v-model="newPassword" type="password" id="new-password" autocomplete="new-password" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="••••••••••" required>
           </div>
         </div>
         <div class="mb-6">
           <label for="confirm-password" class="block text-sm font-medium text-gray-700">Passwort bestätigen</label>
           <div class="mt-1 relative">
-             <span class="absolute inset-y-0 left-0 flex items-center pl-3" aria-hidden="true"><LockClosedIcon class="h-5 w-5 text-gray-400" /></span>
-             <!-- BARRIEREFREIHEIT: autocomplete-Attribut hinzugefügt. -->
+             <span class="absolute inset-y-0 left-0 flex items-center pl-3"><LockClosedIcon class="h-5 w-5 text-gray-400" /></span>
             <input v-model="confirmPassword" type="password" id="confirm-password" autocomplete="new-password" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="••••••••••" required>
           </div>
         </div>
@@ -344,24 +323,21 @@ async function handleRegister() {
         <div class="mb-4">
           <label for="reg-email" class="block text-sm font-medium text-gray-700">Email</label>
           <div class="mt-1 relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3" aria-hidden="true"><EnvelopeIcon class="h-5 w-5 text-gray-400" /></span>
-            <!-- BARRIEREFREIHEIT: Ref für Fokus-Management und autocomplete-Attribut hinzugefügt. -->
-            <input ref="registerEmailInput" v-model="email" type="email" id="reg-email" autocomplete="email" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="email@address.com" required>
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3"><EnvelopeIcon class="h-5 w-5 text-gray-400" /></span>
+            <input v-model="email" type="email" id="reg-email" autocomplete="email" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="email@address.com" required>
           </div>
         </div>
         <div class="mb-4">
           <label for="reg-username" class="block text-sm font-medium text-gray-700">Benutzername</label>
           <div class="mt-1 relative">
-             <span class="absolute inset-y-0 left-0 flex items-center pl-3" aria-hidden="true"><UserIcon class="h-5 w-5 text-gray-400" /></span>
-             <!-- BARRIEREFREIHEIT: autocomplete-Attribut hinzugefügt. -->
+             <span class="absolute inset-y-0 left-0 flex items-center pl-3"><UserIcon class="h-5 w-5 text-gray-400" /></span>
             <input v-model="playerUsername" type="text" id="reg-username" autocomplete="username" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="Wähle einen Namen" required>
           </div>
         </div>
         <div class="mb-6">
           <label for="reg-password" class="block text-sm font-medium text-gray-700">Passwort</label>
           <div class="mt-1 relative">
-             <span class="absolute inset-y-0 left-0 flex items-center pl-3" aria-hidden="true"><LockClosedIcon class="h-5 w-5 text-gray-400" /></span>
-             <!-- BARRIEREFREIHEIT: autocomplete-Attribut hinzugefügt. -->
+             <span class="absolute inset-y-0 left-0 flex items-center pl-3"><LockClosedIcon class="h-5 w-5 text-gray-400" /></span>
             <input v-model="password" type="password" id="reg-password" autocomplete="new-password" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="••••••••••" required>
           </div>
         </div>
@@ -374,15 +350,12 @@ async function handleRegister() {
 
       <!-- Modus: User- & Admin-Login (Standard) -->
       <form v-else @submit.prevent="handleLogin">
-        <!-- BARRIEREFREIHEIT: Dieses div ist jetzt eine tablist für Screenreader. -->
-        <div class="mb-6 flex rounded-lg p-1 bg-gray-200" role="tablist" aria-label="Login-Typ">
-          <!-- BARRIEREFREIHEIT: Buttons sind jetzt Tabs mit aria-selected-Status. -->
-          <button type="button" @click="switchMode(VIEW_MODES.USER_LOGIN)" :class="['w-1/2 p-2 rounded-md font-semibold transition-colors', mode === VIEW_MODES.USER_LOGIN ? 'bg-white shadow' : 'text-gray-600']" role="tab" :aria-selected="mode === VIEW_MODES.USER_LOGIN">User-Login</button>
-          <button type="button" @click="switchMode(VIEW_MODES.ADMIN_LOGIN)" :class="['w-1/2 p-2 rounded-md font-semibold transition-colors', mode === VIEW_MODES.ADMIN_LOGIN ? 'bg-white shadow' : 'text-gray-600']" role="tab" :aria-selected="mode === VIEW_MODES.ADMIN_LOGIN">Admin-Login</button>
+        <div class="mb-6 flex rounded-lg p-1 bg-gray-200">
+          <button type="button" @click="switchMode(VIEW_MODES.USER_LOGIN)" :class="['w-1/2 p-2 rounded-md font-semibold transition-colors', mode === VIEW_MODES.USER_LOGIN ? 'bg-white shadow' : 'text-gray-600']">User-Login</button>
+          <button type="button" @click="switchMode(VIEW_MODES.ADMIN_LOGIN)" :class="['w-1/2 p-2 rounded-md font-semibold transition-colors', mode === VIEW_MODES.ADMIN_LOGIN ? 'bg-white shadow' : 'text-gray-600']">Admin-Login</button>
         </div>
         
-        <!-- BARRIEREFREIHEIT: Jedes Formular ist jetzt ein tabpanel. -->
-        <div role="tabpanel" id="user-login-panel">
+        <div>
           <p v-if="mode === VIEW_MODES.ADMIN_LOGIN" class="text-center text-gray-600 mb-6">Admin-Login</p>
           <p v-else class="text-center text-gray-600 mb-6">Melden Sie sich mit Ihrer E-Mail-Adresse und Ihrem Passwort an.</p>
           
@@ -391,16 +364,14 @@ async function handleRegister() {
             <div class="mb-4">
               <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
               <div class="mt-1 relative">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3" aria-hidden="true"><EnvelopeIcon class="h-5 w-5 text-gray-400" /></span>
-                <!-- BARRIEREFREIHEIT: Ref für Fokus-Management und autocomplete-Attribut hinzugefügt. -->
-                <input ref="userEmailInput" v-model="email" type="email" id="email" autocomplete="email" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="email@address.com" required>
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3"><EnvelopeIcon class="h-5 w-5 text-gray-400" /></span>
+                <input v-model="email" type="email" id="email" autocomplete="email" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="email@address.com" required>
               </div>
             </div>
             <div class="mb-2">
               <label for="password" class="block text-sm font-medium text-gray-700">Passwort</label>
               <div class="mt-1 relative">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3" aria-hidden="true"><LockClosedIcon class="h-5 w-5 text-gray-400" /></span>
-                <!-- BARRIEREFREIHEIT: autocomplete-Attribut hinzugefügt. -->
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3"><LockClosedIcon class="h-5 w-5 text-gray-400" /></span>
                 <input v-model="password" type="password" id="password" autocomplete="current-password" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="••••••••••" required>
               </div>
             </div>
@@ -408,20 +379,18 @@ async function handleRegister() {
         </div>
 
         <!-- Admin-Login Felder -->
-        <div v-if="mode === VIEW_MODES.ADMIN_LOGIN" role="tabpanel" id="admin-login-panel">
+        <div v-if="mode === VIEW_MODES.ADMIN_LOGIN">
           <div class="mb-4">
             <label for="username" class="block text-sm font-medium text-gray-700">Login</label>
             <div class="mt-1 relative">
-              <span class="absolute inset-y-0 left-0 flex items-center pl-3" aria-hidden="true"><UserIcon class="h-5 w-5 text-gray-400" /></span>
-              <!-- BARRIEREFREIHEIT: Ref für Fokus-Management und autocomplete-Attribut hinzugefügt. -->
-              <input ref="adminLoginInput" v-model="adminLoginName" type="text" id="username" autocomplete="username" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="Username" required>
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3"><UserIcon class="h-5 w-5 text-gray-400" /></span>
+              <input v-model="adminLoginName" type="text" id="username" autocomplete="username" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="Username" required>
             </div>
           </div>
           <div class="mb-2">
             <label for="admin-password" class="block text-sm font-medium text-gray-700">Passwort</label>
             <div class="mt-1 relative">
-              <span class="absolute inset-y-0 left-0 flex items-center pl-3" aria-hidden="true"><LockClosedIcon class="h-5 w-5 text-gray-400" /></span>
-              <!-- BARRIEREFREIHEIT: autocomplete-Attribut hinzugefügt. -->
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3"><LockClosedIcon class="h-5 w-5 text-gray-400" /></span>
               <input v-model="adminPassword" type="password" id="admin-password" autocomplete="current-password" class="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500" placeholder="••••••••••" required>
             </div>
           </div>
@@ -439,5 +408,5 @@ async function handleRegister() {
       </form>
 
     </div>
-  </main>
+  </div>
 </template>

@@ -6,7 +6,7 @@
 // ==================================================================================
 
 // import: Lädt Vue-Funktionen (ref, onMounted) und Icon-Komponenten.
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { UsersIcon, CubeIcon, BellIcon } from '@heroicons/vue/24/outline';
 
 // ==================================================================================
@@ -24,6 +24,18 @@ const stats = ref([
   { name: 'Gesamte Benutzer', value: 12, icon: UsersIcon, color: 'bg-blue-500' },
   { name: 'Gesamte Geräte', value: 2, icon: CubeIcon, color: 'bg-yellow-500' },
 ]);
+
+// BARRIEREFREIHEIT: Reaktive Variable für die Zoom-Stufe.
+const zoomLevel = ref(1);
+
+// ==================================================================================
+// Computed Properties
+// ==================================================================================
+
+// BARRIEREFREIHEIT: Berechnete Eigenschaft, die ein Style-Objekt für die dynamische Skalierung (Zoom) zurückgibt.
+const containerStyle = computed(() => ({
+  zoom: zoomLevel.value
+}));
 
 // ==================================================================================
 // Methoden: Zukünftige Funktionen zum Laden der Daten.
@@ -48,6 +60,14 @@ const stats = ref([
  */
 // onMounted(fetchStats);
 
+// BARRIEREFREIHEIT: Methoden zur Anpassung der Zoom-Stufe.
+function increaseZoom() {
+  zoomLevel.value += 0.1;
+}
+function decreaseZoom() {
+  zoomLevel.value -= 0.1;
+}
+
 </script>
 
 <template>
@@ -60,7 +80,14 @@ const stats = ref([
       hier wird die Icon-Komponente aus dem `stat`-Objekt geladen.
     - {{ ... }}:    Gibt den Wert einer Variable als Text aus (Interpolation).
   -->
-  <div class="p-4 sm:p-6 bg-gray-100 min-h-full">
+  <div class="p-4 sm:p-6 bg-gray-100 min-h-full" :style="containerStyle">
+    <!-- BARRIEREFREIHEIT: Steuerelemente zur Anpassung der Zoom-Stufe. -->
+    <div class="text-right mb-4">
+      <span class="text-sm text-gray-600 mr-2">Zoom:</span>
+      <button @click="decreaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">-</button>
+      <button @click="increaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300 ml-1">+</button>
+    </div>
+
     <h1 class="text-3xl font-bold text-gray-800 mb-6">Admin Dashboard</h1>
 
     <!-- Übersicht der Statistiken -->

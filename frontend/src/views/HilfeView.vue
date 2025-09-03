@@ -5,7 +5,7 @@
 // ==================================================================================
 
 // import: Lädt Vue-Funktionen (ref) und Icon-Komponenten.
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { ChevronDownIcon, EnvelopeIcon, ArrowUturnLeftIcon } from '@heroicons/vue/24/solid';
 
 // ==================================================================================
@@ -52,6 +52,18 @@ const faqs = ref([
   }
 ]);
 
+// BARRIEREFREIHEIT: Reaktive Variable für die Zoom-Stufe.
+const zoomLevel = ref(1);
+
+// ==================================================================================
+// Computed Properties
+// ==================================================================================
+
+// BARRIEREFREIHEIT: Berechnete Eigenschaft, die ein Style-Objekt für die dynamische Skalierung (Zoom) zurückgibt.
+const containerStyle = computed(() => ({
+  zoom: zoomLevel.value
+}));
+
 // ==================================================================================
 // Methoden: Funktionen zur Handhabung von Benutzerinteraktionen.
 // Verantwortlich: Lisa
@@ -75,6 +87,14 @@ function toggleAccordion(section) {
 function goBackToLobby() {
   emit('show-lobby');
 }
+
+// BARRIEREFREIHEIT: Methoden zur Anpassung der Zoom-Stufe.
+function increaseZoom() {
+  zoomLevel.value += 0.1;
+}
+function decreaseZoom() {
+  zoomLevel.value -= 0.1;
+}
 </script>
 
 <template>
@@ -87,8 +107,14 @@ function goBackToLobby() {
     - v-show:       Ändert die Sichtbarkeit eines Elements (ähnlich v-if, aber schaltet nur CSS `display` um).
     - v-html:       Rendert rohes HTML. Nur für vertrauenswürdigen Inhalt verwenden, um XSS-Angriffe zu vermeiden.
   -->
-  <div class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+  <div class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4" :style="containerStyle">
     <header class="w-full max-w-4xl mx-auto text-center mb-8">
+      <!-- BARRIEREFREIHEIT: Steuerelemente zur Anpassung der Zoom-Stufe. -->
+      <div class="text-right mb-4">
+        <span class="text-sm text-gray-600 mr-2">Zoom:</span>
+        <button @click="decreaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">-</button>
+        <button @click="increaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300 ml-1">+</button>
+      </div>
       <img src="../assets/logo.svg" alt="Wahr oder Watt Logo" class="mx-auto h-32 w-auto mb-6">
       <h1 class="text-5xl font-extrabold text-gray-800 tracking-tight">Hilfe & FAQ</h1>
     </header>

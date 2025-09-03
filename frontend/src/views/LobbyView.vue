@@ -6,7 +6,7 @@
 // ==================================================================================
 
 // import: Lädt Vue-Funktionen (ref, onMounted) und Icon-Komponenten.
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { UserCircleIcon, TrophyIcon, QuestionMarkCircleIcon, ArrowRightOnRectangleIcon, UsersIcon, ChevronRightIcon } from '@heroicons/vue/24/solid';
 
 // ==================================================================================
@@ -37,6 +37,18 @@ const availablePlayers = ref([]);
  * @description Speichert das vom Benutzer ausgewählte Spiellevel (1 oder 2).
  */
 const selectedLevel = ref(1);
+
+// BARRIEREFREIHEIT: Reaktive Variable für die Zoom-Stufe.
+const zoomLevel = ref(1);
+
+// ==================================================================================
+// Computed Properties
+// ==================================================================================
+
+// BARRIEREFREIHEIT: Berechnete Eigenschaft, die ein Style-Objekt für die dynamische Skalierung (Zoom) zurückgibt.
+const containerStyle = computed(() => ({
+  zoom: zoomLevel.value
+}));
 
 // ==================================================================================
 // Methoden: Funktionen zur Handhabung von Benutzerinteraktionen und Geschäftslogik.
@@ -103,6 +115,14 @@ async function fetchAvailablePlayers() {
   });
 }
 
+// BARRIEREFREIHEIT: Methoden zur Anpassung der Zoom-Stufe.
+function increaseZoom() {
+  zoomLevel.value += 0.1;
+}
+function decreaseZoom() {
+  zoomLevel.value -= 0.1;
+}
+
 // ==================================================================================
 // Lifecycle Hooks: Funktionen, die Vue zu bestimmten Zeitpunkten im Lebenszyklus einer Komponente automatisch aufruft.
 // Verantwortlich: Dima (da der Hook die API-Logik auslöst)
@@ -136,6 +156,12 @@ onMounted(async () => {
           <div class="text-2xl font-bold text-gray-800">Lobby</div>
         </div>
         <div class="flex items-center gap-4">
+          <!-- BARRIEREFREIHEIT: Steuerelemente zur Anpassung der Zoom-Stufe. -->
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-600">Zoom:</span>
+            <button @click="decreaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">-</button>
+            <button @click="increaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">+</button>
+          </div>
           <button @click="onHighscoresClick" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors">
             <TrophyIcon class="h-6 w-6" />
             <span>Highscores</span>
@@ -151,7 +177,7 @@ onMounted(async () => {
         </div>
       </header>
 
-      <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <main class="grid grid-cols-1 lg:grid-cols-3 gap-8" :style="containerStyle">
 
         <!-- Spalte für Spieleinstellungen -->
         <div class="lg:col-span-1 bg-white rounded-2xl shadow-lg p-6">

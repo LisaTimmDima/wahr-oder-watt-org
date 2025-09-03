@@ -6,7 +6,7 @@
 // ==================================================================================
 
 // import: Lädt Vue-Funktionen (ref, onMounted) und Icon-Komponenten.
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { UserCircleIcon, ArrowUturnLeftIcon } from '@heroicons/vue/24/solid';
 
 // ==================================================================================
@@ -43,6 +43,18 @@ const highscores = ref([]);
  * @todo Aktuell ein Platzhalter. Sollte aus einem globalen State (z.B. Pinia) oder per API-Aufruf gefüllt werden.
  */
 const loggedInUser = ref({ id: null, name: '' });
+
+// BARRIEREFREIHEIT: Reaktive Variable für die Zoom-Stufe.
+const zoomLevel = ref(1);
+
+// ==================================================================================
+// Computed Properties
+// ==================================================================================
+
+// BARRIEREFREIHEIT: Berechnete Eigenschaft, die ein Style-Objekt für die dynamische Skalierung (Zoom) zurückgibt.
+const containerStyle = computed(() => ({
+  zoom: zoomLevel.value
+}));
 
 // ==================================================================================
 // Methoden: Funktionen zur Datenverarbeitung und Handhabung von Benutzerinteraktionen.
@@ -108,6 +120,14 @@ function goBackToLobby() {
   emit('show-lobby');
 }
 
+// BARRIEREFREIHEIT: Methoden zur Anpassung der Zoom-Stufe.
+function increaseZoom() {
+  zoomLevel.value += 0.1;
+}
+function decreaseZoom() {
+  zoomLevel.value -= 0.1;
+}
+
 // ==================================================================================
 // Lifecycle Hooks: Funktionen, die Vue zu bestimmten Zeitpunkten im Lebenszyklus einer Komponente aufruft.
 // Verantwortlich: Dima (da der Hook die API-Logik auslöst)
@@ -133,8 +153,14 @@ onMounted(() => {
     - @click:     Führt die `goBackToLobby`-Methode bei einem Klick aus.
     - {{ ... }}:    Gibt den Wert einer Variable als Text aus (Interpolation).
   -->
-  <div class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+  <div class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4" :style="containerStyle">
     <header class="w-full max-w-2xl mx-auto text-center mb-8">
+      <!-- BARRIEREFREIHEIT: Steuerelemente zur Anpassung der Zoom-Stufe. -->
+      <div class="text-right mb-4">
+        <span class="text-sm text-gray-600 mr-2">Zoom:</span>
+        <button @click="decreaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">-</button>
+        <button @click="increaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300 ml-1">+</button>
+      </div>
       <img src="../assets/logo.svg" alt="Wahr oder Watt Logo" class="mx-auto h-32 w-auto mb-6">
       <h1 class="text-5xl font-extrabold text-gray-800 tracking-tight">Highscores</h1>
     </header>
