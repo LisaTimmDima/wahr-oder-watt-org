@@ -1,11 +1,34 @@
 <script setup>
+// ==================================================================================
+// Verantwortlichkeiten:
+// - Lisa: Komplette UI-Struktur, State-Management und Logik für die Hilfe-Seite.
+// ==================================================================================
+
+// import: Lädt Vue-Funktionen (ref) und Icon-Komponenten.
 import { ref } from 'vue';
 import { ChevronDownIcon, EnvelopeIcon, ArrowUturnLeftIcon } from '@heroicons/vue/24/solid';
 
+// ==================================================================================
+// Emits: Deklariert das 'show-lobby'-Event, um zur Lobby zurückzukehren.
+// ==================================================================================
 const emit = defineEmits(['show-lobby']);
 
+// ==================================================================================
+// Reactive State: ref() erstellt reaktive Variablen zur Steuerung der UI.
+// Verantwortlich: Lisa
+// ==================================================================================
+
+/**
+ * @type {import('vue').Ref<string | null>}
+ * @description Speichert die ID des aktuell geöffneten Akkordeon-Elements. `null`, wenn alle geschlossen sind.
+ */
 const openAccordion = ref('spielregeln');
 
+/**
+ * @type {import('vue').Ref<Array<object>>}
+ * @description Enthält die statischen Inhalte für die FAQ-Sektion.
+ * Jedes Objekt hat eine `id`, eine `question` (Frage) und eine `answer` (Antwort).
+ */
 const faqs = ref([
   {
     id: 'spielregeln',
@@ -23,42 +46,71 @@ const faqs = ref([
     answer: '<strong>Lobby & Spielstart:</strong> Alle Spieler loggen sich ein und versammeln sich in einer digitalen Lobby. <strong>Spielansicht:</strong> Auf dem Bildschirm aller Teilnehmer erscheint ein Bild eines Gegenstands (z. B. Desktop-PC). Jeder Gegenstand hat mehrere passende Eigenschaften. <strong>Beispiel 1:</strong> „Ein Desktop-PC könnte eine Tastatur haben. <strong>Beispiel 2:</strong> „Ein Smartphone hat einen Akku.“ <strong>Reaktion ist alles:</strong> Ein Countdown (z. B. 10 Sekunden) läuft ab. Innerhalb dieser Zeit müssen alle Spieler eine Entscheidung treffen und einen der vier möglichen Buttons drücken. Wer nicht rechtzeitig antwortet, erhält für diese Runde keine Punkte. <strong>Die Auflösung:</strong> Sobald die Zeit abgelaufen ist oder alle Spieler geantwortet haben, wird die Runde sofort ausgewertet: Das System zeigt die korrekte Antwort an (z. B. „FALSCH! Ein Desktop-PC hat keine beweglichen Teile.“). Die Spieler sehen, wer richtig und wer falsch lag. Die Punkte werden live vergeben und der aktuelle Spielstand wird angezeigt.'
   },
   {
-    id: 'spielmodi:',
+    id: 'spielmodi',
     question: 'Spielmodi',
     answer: '<strong>Level 1:</strong> Speedrun 60 Sekunden Gesamtzeit, so viele Fragen wie möglich.<strong>Level 2:</strong> Runden-Duell 5 Runden, 10 Sekunden pro Runde.'
   }
 ]);
 
+// ==================================================================================
+// Methoden: Funktionen zur Handhabung von Benutzerinteraktionen.
+// Verantwortlich: Lisa
+// ==================================================================================
+
+/**
+ * @function toggleAccordion
+ * @author Lisa
+ * @description Öffnet oder schließt ein Akkordeon-Element. Wenn das geklickte Element bereits offen ist, wird es geschlossen.
+ * @param {string} section - Die ID der Sektion, die umgeschaltet werden soll.
+ */
 function toggleAccordion(section) {
   openAccordion.value = openAccordion.value === section ? null : section;
 }
 
+/**
+ * @function goBackToLobby
+ * @author Lisa
+ * @description Löst ein Event aus, um zur Lobby-Ansicht zurückzukehren.
+ */
 function goBackToLobby() {
   emit('show-lobby');
 }
 </script>
 
 <template>
+  <!-- 
+    Vue Template Grundlagen:
+    - @click:      Führt eine Methode aus, wenn auf das Element geklickt wird.
+    - v-for:        Erstellt eine Schleife über eine Liste (hier `faqs`).
+    - :key:         Eindeutiger Schlüssel für jedes `v-for`-Element, wichtig für die Performance.
+    - :class:       Bindet Klassen dynamisch, z.B. für die Pfeil-Rotation im Akkordeon.
+    - v-show:       Ändert die Sichtbarkeit eines Elements (ähnlich v-if, aber schaltet nur CSS `display` um).
+    - v-html:       Rendert rohes HTML. Nur für vertrauenswürdigen Inhalt verwenden, um XSS-Angriffe zu vermeiden.
+  -->
   <div class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
     <header class="w-full max-w-4xl mx-auto text-center mb-8">
       <img src="../assets/logo.svg" alt="Wahr oder Watt Logo" class="mx-auto h-32 w-auto mb-6">
       <h1 class="text-5xl font-extrabold text-gray-800 tracking-tight">Hilfe & FAQ</h1>
     </header>
 
-  <main class="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden divide-y divide-gray-200">
-  <div v-for="faq in faqs" :key="faq.id">
-    <button 
-      @click="toggleAccordion(faq.id)" 
-      class="w-full flex justify-between items-center p-6 text-left hover:bg-gray-50 focus:outline-none"
-    >
-      <h2 class="text-2xl font-semibold text-gray-800">{{ faq.question }}</h2>
-      <ChevronDownIcon :class="['h-8 w-8 text-gray-500 transition-transform transform', openAccordion === faq.id ? '-rotate-180' : '']" />
-    </button>
-    <div v-show="openAccordion === faq.id" class="px-6 pb-6 text-gray-700 text-lg">
-      <p v-html="faq.answer"></p>
-    </div>
-  </div>
-</main>
+    <main class="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden divide-y divide-gray-200">
+      <div v-for="faq in faqs" :key="faq.id">
+        <button 
+          @click="toggleAccordion(faq.id)" 
+          class="w-full flex justify-between items-center p-6 text-left hover:bg-gray-50 focus:outline-none"
+        >
+          <h2 class="text-2xl font-semibold text-gray-800">{{ faq.question }}</h2>
+          <ChevronDownIcon :class="['h-8 w-8 text-gray-500 transition-transform transform', openAccordion === faq.id ? '-rotate-180' : '']" />
+        </button>
+        <!-- v-show wird hier verwendet, da das häufige Ein- und Ausblenden performanter ist als mit v-if, das die Elemente komplett neu erstellt. -->
+        <div v-show="openAccordion === faq.id" class="px-6 pb-6 text-gray-700 text-lg prose max-w-none">
+          <!-- ACHTUNG: v-html wird hier verwendet, um HTML-Tags wie <strong> zu rendern. -->
+          <!-- Dies sollte nur mit absolut vertrauenswürdigem Inhalt geschehen (wie hier, da er hartkodiert ist), -->
+          <!-- da es sonst ein Sicherheitsrisiko (XSS) darstellen kann. -->
+          <p v-html="faq.answer"></p>
+        </div>
+      </div>
+    </main>
 
     <footer class="w-full max-w-4xl mx-auto mt-12 text-center">
       <div class="bg-blue-600 text-white rounded-2xl shadow-xl p-4 max-w-2xl mx-auto">
@@ -88,3 +140,10 @@ function goBackToLobby() {
     </footer>
   </div>
 </template>
+
+<style scoped>
+/* Stellt sicher, dass die mit v-html gerenderten Inhalte die Textformatierung erben */
+.prose p {
+  margin: 0;
+}
+</style>
