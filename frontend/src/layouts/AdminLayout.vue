@@ -1,34 +1,102 @@
+<!--
+  File: AdminLayout.vue
+  Author: Lisa
+  Description: Dieses Layout stellt die Hauptstruktur für den Admin-Bereich der Anwendung bereit.
+               Es enthält die seitliche Navigationsleiste, die Kopfzeile und den Hauptinhaltsbereich,
+               in dem die verschiedenen Admin-Ansichten (Dashboard, Benutzerverwaltung etc.) gerendert werden.
+-->
 <script setup>
+// ==================================================================================
+// Importe
+// Vue-Funktionen und Komponenten, die in diesem Layout verwendet werden.
+// ==================================================================================
 import { ref } from 'vue';
 import { HomeIcon, UsersIcon, CubeIcon, BellIcon, UserCircleIcon, PlayIcon, XMarkIcon, ArrowLeftOnRectangleIcon } from '@heroicons/vue/24/outline';
 import AdminDashboardView from '../views/AdminDashboardView.vue';
 import AdminUserManagement from '../views/AdminUserManagement.vue';
 import AdminItemsView from '../views/AdminItemsView.vue';
 
+// ==================================================================================
+// Emits
+// Deklariert die Events, die diese Komponente an eine Eltern-Komponente senden kann.
+// `defineEmits` ist ein Compiler-Makro, das nur innerhalb von <script setup> funktioniert.
+// ==================================================================================
 const emit = defineEmits(['go-to-lobby']);
 
+// ==================================================================================
+// Reactive State
+// ref() wird verwendet, um reaktive Variablen zu erstellen. Änderungen an diesen Variablen
+// führen automatisch zu einer Aktualisierung der Benutzeroberfläche (UI).
+// ==================================================================================
+
+/**
+ * @type {import('vue').Ref<string>}
+ * @description Speichert den Namen der aktuell aktiven Ansicht (z.B. 'dashboard').
+ */
 const activeView = ref('dashboard');
+
+/**
+ * @type {import('vue').Ref<boolean>}
+ * @description Steuert die Sichtbarkeit des Benachrichtigungs-Popups.
+ */
 const showNotifications = ref(false);
 
-const navigation = [
-  { name: 'Dashboard', view: 'dashboard', icon: HomeIcon },
-  { name: 'Benutzer verwalten', view: 'users', icon: UsersIcon },
-  { name: 'Items verwalten', view: 'items', icon: CubeIcon },
-];
-
+/**
+ * @type {import('vue').Ref<Array<object>>}
+ * @description Eine Liste von Benachrichtigungsobjekten, die im Popup angezeigt werden.
+ * @todo Aktuell hartkodiert. Sollte durch einen API-Aufruf ersetzt werden.
+ */
 const notifications = ref([
   { id: 1, text: 'Neuer Benutzer "Max Mustermann" wartet auf Freischaltung.', time: 'vor 5 Minuten' },
   { id: 2, text: 'Item "Grafikkarte" wurde bearbeitet.', time: 'vor 1 Stunde' },
 ]);
 
+// ==================================================================================
+// Konstanten
+// Statische Daten, die für die Navigation verwendet werden.
+// ==================================================================================
+
+/**
+ * @const {Array<object>}
+ * @description Definiert die Menüpunkte für die seitliche Navigationsleiste.
+ * Jedes Objekt enthält den Namen, die zugehörige Ansicht (view) und das Icon.
+ */
+const navigation = [
+  { name: 'Dashboard', view: 'dashboard', icon: HomeIcon },
+  { name: 'Benutzer verwalten', view: 'users', icon: UsersIcon },
+  { name: 'Geräte verwalten', view: 'items', icon: CubeIcon },
+];
+
+// ==================================================================================
+// Methoden
+// Funktionen, die durch Benutzerinteraktionen (z.B. Klicks) aufgerufen werden.
+// ==================================================================================
+
+/**
+ * @function handleAdminPlay
+ * @author Lisa
+ * @description Sendet ein Event an die Eltern-Komponente, um zur Spiele-Lobby zu wechseln.
+ */
 function handleAdminPlay() {
   emit('go-to-lobby');
 }
 
+/**
+ * @function navigate
+ * @author Lisa
+ * @description Ändert die aktive Ansicht im Admin-Bereich.
+ * @param {string} view - Der Name der Ansicht, die angezeigt werden soll (z.B. 'dashboard', 'users').
+ */
 function navigate(view) {
   activeView.value = view;
 }
 
+/**
+ * @function logout
+ * @author Lisa
+ * @description Meldet den Administrator ab, indem der JWT-Token aus dem Local Storage entfernt
+ *              und der Benutzer zur Login-Seite weitergeleitet wird.
+ */
 function logout() {
   localStorage.removeItem('jwt');
   window.location.href = '/login';
@@ -37,7 +105,16 @@ function logout() {
 </script>
 
 <template>
+  <!--
+    Vue Template Grundlagen:
+    - Die Direktive `v-for` wird verwendet, um über eine Liste (z.B. `navigation`) zu iterieren und für jedes Element ein Template-Fragment zu rendern.
+    - `@click` ist eine Kurzschreibweise für `v-on:click` und registriert einen Klick-Event-Listener, der eine Methode aufruft.
+    - `:class` (Kurzform für `v-bind:class`) bindet dynamisch CSS-Klassen an ein Element, basierend auf dem Zustand von reaktiven Variablen.
+    - `<component :is="...">` ist eine dynamische Komponente, die es ermöglicht, zur Laufzeit zu entscheiden, welche Komponente gerendert wird.
+    - `v-if` / `v-else-if` / `v-else` sind bedingte Anweisungen, die Elemente nur dann rendern, wenn ihre Bedingung wahr ist.
+  -->
   <div class="bg-gray-100 min-h-screen flex font-sans">
+    <!-- Seitliche Navigationsleiste -->
     <aside class="w-64 bg-white p-6 flex flex-col flex-shrink-0 shadow-lg">
       <div>
         <div class="flex items-center gap-3 mb-10">
@@ -59,7 +136,9 @@ function logout() {
       </div>
     </aside>
 
+    <!-- Hauptinhaltsbereich -->
     <div class="flex-grow flex flex-col">
+      <!-- Kopfzeile -->
       <header class="bg-white shadow-md p-4 flex justify-end items-center z-20">
         <div class="flex items-center gap-6">
            <button @click="handleAdminPlay" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors">
@@ -71,7 +150,7 @@ function logout() {
               <BellIcon class="h-7 w-7 text-gray-500" />
               <span v-if="notifications.length > 0" class="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">{{ notifications.length }}</span>
             </button>
-            <!-- Notifications Popup -->
+            <!-- Benachrichtigungs-Popup -->
             <div v-if="showNotifications" class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200">
               <div class="p-4 flex justify-between items-center border-b">
                 <h3 class="font-bold text-gray-800">Benachrichtigungen</h3>
@@ -101,6 +180,7 @@ function logout() {
         </div>
       </header>
 
+      <!-- Ansichten-Container -->
       <main class="flex-grow p-6">
         <AdminDashboardView v-if="activeView === 'dashboard'" @admin-play="handleAdminPlay" @navigate="navigate" />
         <AdminUserManagement v-else-if="activeView === 'users'" />

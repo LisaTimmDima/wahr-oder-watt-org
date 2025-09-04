@@ -1,6 +1,7 @@
 import globals from 'globals'
 import pluginJs from '@eslint/js'
 import pluginVue from 'eslint-plugin-vue'
+import pluginVuejsAccessibility from 'eslint-plugin-vuejs-accessibility'
 
 export default [
   // This is the important part to add or modify.
@@ -17,5 +18,6 @@ export default [
   // The rest of your configuration
   { languageOptions: { globals: globals.browser } },
   pluginJs.configs.recommended,
-  ...pluginVue.configs['flat/essential']
+  ...pluginVue.configs['flat/essential'],
+  ...pluginVuejsAccessibility.configs['flat/recommended']
 ]
