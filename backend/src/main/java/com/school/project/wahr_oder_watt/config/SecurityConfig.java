@@ -1,5 +1,7 @@
 package com.school.project.wahr_oder_watt.config;
 
+import com.school.project.wahr_oder_watt.security.JwtAuthenticationFilter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,11 +53,13 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http,
       AuthenticationProvider authenticationProvider,
-      AuthenticationEntryPoint entryPoint) throws Exception {
+      AuthenticationEntryPoint entryPoint,
+      JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
     http
         .csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authenticationProvider(authenticationProvider)
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/auth/**", "/api/auth/**").permitAll()
             .anyRequest().authenticated()

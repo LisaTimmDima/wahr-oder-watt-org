@@ -15,12 +15,35 @@ public class JwtService {
   @Value("${app.jwt.secret}")
   private String secret;
 
+  @Value("${app.jwt.expiration}")
+  private long expirationMs;
+
+  // Token erzeugen
+  public String generateToken(String username) {
+    Date now = new Date();
+    Date exp = new Date(now.getTime() + expirationMs);
+    return Jwts.builder()
+        .setSubject(username)
+        .setIssuedAt(now)
+        .setExpiration(exp)
+        .signWith(SignatureAlgorithm.HS512, secret.getBytes(StandardCharsets.UTF_8))
+        .compact();
+  }
+
   public String extractUsername(String token) {
     return extractAllClaims(token).getSubject();
   }
 
+  public boolean isValid(String token) {
+    try {
+      return !isExpired(token);
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
   public boolean isTokenValid(String token, UserDetails user) {
-    return extractUsername(token).equals(user.getUsername()) && !isExpired(token);
+    return extractUsername(token).equals(user.getUsername()) && isValid(token);
   }
 
   private boolean isExpired(String token) {

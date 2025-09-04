@@ -2,8 +2,9 @@ package com.school.project.wahr_oder_watt.controller;
 
 import com.school.project.wahr_oder_watt.model.User;
 import com.school.project.wahr_oder_watt.service.UserService;
-import com.school.project.wahr_oder_watt.dto.UserDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
@@ -20,6 +21,7 @@ import java.util.List;
 /**
  * REST-Controller zur Verwaltung von Benutzern.
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -49,15 +51,22 @@ public class UserController {
 @GetMapping("/me")
 @ResponseStatus(HttpStatus.OK)
 public Map<String, Object> me(Authentication authentication) {
+  Logger log1 = log;
+  log1.info(authentication.toString());
   Map<String, Object> dto = new HashMap<>();
   if (authentication == null) {
     dto.put("id", 0);
     dto.put("username", "unknown");
     return dto;
   }
-  // TODO: Echten User aus DB laden falls nötig
-  dto.put("id", 1L);
-  dto.put("username", authentication.getName());
+  User user = userService.findByEmail(authentication.getName());
+  if (user == null) {
+    dto.put("id", 0);
+    dto.put("username", "unknown");
+    return dto;
+  }
+  dto.put("id", user.getId());
+  dto.put("username", user.getUsername());
   return dto;
 }
 

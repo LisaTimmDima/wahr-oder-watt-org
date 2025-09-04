@@ -1,60 +1,57 @@
 <script setup>
-import {ref, onMounted} from 'vue';
-import {
-  TrophyIcon,
-  QuestionMarkCircleIcon,
-  ArrowRightOnRectangleIcon,
-  UsersIcon,
-  UserCircleIcon,
-  ChevronRightIcon
-} from '@heroicons/vue/24/outline';
+import {ref, onMounted, computed} from 'vue';
+import { UserCircleIcon, TrophyIcon, QuestionMarkCircleIcon, ArrowRightOnRectangleIcon, UsersIcon, ChevronRightIcon } from '@heroicons/vue/24/solid';
 
-const emit = defineEmits(['start-game', 'show-help', 'show-highscores']);
-
+const emit = defineEmits(['start-game', 'show-help', 'show-highscores'])
 const loggedInUser = ref({ id: 0, name: 'Lädt...' });
 const availablePlayers = ref([]);
 const selectedLevel = ref(1);
 const loading = ref(false);
 const error = ref(null);
-
-const jwt = ref(localStorage.getItem('jwt'));
-
-function authHeaders() {
-  return jwt.value
-      ? { 'Accept': 'application/json', 'Authorization': `Bearer ${jwt.value}` }
-      : { 'Accept': 'application/json' };
-}
+const token = computed(() => localStorage.getItem('jwt'));
 
 async function fetchCurrentUser() {
-  const resp = await fetch('/api/users/me', { headers: authHeaders() });
-  if (!resp.ok) throw new Error('Fehler Benutzer: ' + resp.status);
-  return resp.json();
-}
-
-async function fetchUsers() {
-  const resp = await fetch('/api/users', { headers: authHeaders() });
-  if (!resp.ok) throw new Error('Fehler Benutzerliste: ' + resp.status);
-  return resp.json();
+  const resp = await fetch('/api/users/me', { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token.value}` } });
+  if (!resp.ok) throw new Error('Fehler beim Laden der Benutzer');
+  return await resp.json();
 }
 
 function challengePlayer(player) {
   emit('start-game', { opponent: player, level: selectedLevel.value });
 }
 
+function onHelpClick() {
+  emit('show-help');
+}
+
+function onHighscoresClick() {
+  emit('show-highscores');
+}
+
 function logout() {
-  localStorage.removeItem('jwt');
+  localStorage.removeItem(token);
   localStorage.removeItem('currentUserId');
   localStorage.removeItem('currentUsername');
   window.location.href = '/login';
 }
 
+  async function fetchUsers() {
+  const resp = await fetch('/api/users', { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token.value}` } });
+  if (!resp.ok) throw new Error('Fehler beim Laden der Benutzer');
+  return await resp.json();
+}
+
 onMounted(async () => {
   loading.value = true;
   try {
+    // Aktuellen User laden (Backend) mit Fallback auf localStorage
     try {
       const me = await fetchCurrentUser();
-      loggedInUser.value = { id: me.id, name: me.username };
-    } catch {
+      loggedInUser.value = {
+        id: me.id,
+        name: me.username,
+      };
+    } catch (e) {
       loggedInUser.value = {
         id: Number(localStorage.getItem('currentUserId')),
         name: localStorage.getItem('currentUsername')
@@ -63,7 +60,10 @@ onMounted(async () => {
     const all = await fetchUsers();
     availablePlayers.value = all
         .filter(u => u.id !== loggedInUser.value.id)
-        .map(u => ({ id: u.id, name: u.username }));
+        .map(u => ({
+          id: u.id,
+          name: u.username,
+        }));
   } catch (e) {
     error.value = e.message;
   } finally {
