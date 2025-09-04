@@ -53,7 +53,7 @@ const faqs = ref([
   {
     id: 'geräteundeigenschaften',
     question: 'Erklärung von Symbole',
-    answer: '<strong>Geräte:</strong> <strong>Eigenschaften:</strong> '
+    answer: '<strong>Geräte:</strong>  🖥️ Desktop-PC,📱 Smartphone, ⌚️ Smartwatch.<strong>Eigenschaften:</strong> ⌨️ Tastatur , 🖱️ Maus, 🎧 Kopfhörer, 🔊 Lautsprecher , 🛜 Wi-Fi, 🔌 Netzteil, 📀 CD-Laufwerk, 💾 Floppy Disk, 📷 Kamera, 🕹️ Game-Controller 🎙️ Mikrofon, 🔩 Schrauben, 📁 Verzeichnis, 🔋 Akku, 🎵 Musiksteuerung,  💳 Mobiles Bezahlen (NFC),  😴 Schlaftracking, ❤️‍🩹 Herzerzfrequenzmessung, 🚶 Schrittzähler, 📞 Anrufe tätigen, 🌐 Internet (LAN/5G), ⏰Timer, 💧Wasserdichtigkeit, 🗣️Sprachassistent '
   }
 ]);
 
