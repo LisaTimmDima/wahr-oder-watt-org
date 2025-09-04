@@ -39,15 +39,6 @@ const highscores = ref([]);
 const loggedInUser = ref({ id: null, name: '' }); // Platzhalter für
 const token = computed(() => localStorage.getItem('jwt'));
 
-// den aktuell eingeloggten Benutzer
-
-
-/**
- * @type {import('vue').Ref<object>}
- * @description Speichert den aktuell angemeldeten Benutzer, um ihn in der Liste hervorzuheben.
- * @todo Aktuell ein Platzhalter. Sollte aus einem globalen State (z.B. Pinia) oder per API-Aufruf gefüllt werden.
- */
-const loggedInUser = ref({ id: null, name: '' });
 
 // BARRIEREFREIHEIT: Reaktive Variable für die Zoom-Stufe.
 const zoomLevel = ref(1);
