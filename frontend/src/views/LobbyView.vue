@@ -1,10 +1,42 @@
 <script setup>
-import {ref, onMounted, computed} from 'vue';
+
+// ==================================================================================
+// Verantwortlichkeiten:
+// - Lisa: UI-Struktur, Layout, State-Management und Event-Handling.
+// - Dima: Implementierung der API-Aufrufe zum Abrufen von Daten.
+// ==================================================================================
+
+// import: Lädt Vue-Funktionen (ref, onMounted) und Icon-Komponenten.
+import { ref, onMounted, computed } from 'vue';
 import { UserCircleIcon, TrophyIcon, QuestionMarkCircleIcon, ArrowRightOnRectangleIcon, UsersIcon, ChevronRightIcon } from '@heroicons/vue/24/solid';
 
-const emit = defineEmits(['start-game', 'show-help', 'show-highscores'])
+// ==================================================================================
+// Emits: Deklariert Events, die diese Komponente aussenden kann, um mit der Eltern-Komponente (App.vue) zu kommunizieren.
+// ==================================================================================
+const emit = defineEmits(['start-game', 'show-help', 'show-highscores']);
+
+// ==================================================================================
+// Reactive State: ref() erstellt reaktive Variablen, deren Änderungen die UI automatisch aktualisieren.
+// Verantwortlich: Lisa
+// ==================================================================================
+
+/**
+ * @type {import('vue').Ref<object>}
+ * @description Speichert die Informationen des aktuell angemeldeten Benutzers.
+ * @todo Aktuell hartkodiert. Sollte durch einen API-Aufruf ersetzt werden.
+ */
 const loggedInUser = ref({ id: 0, name: 'Lädt...' });
+
+/**
+ * @type {import('vue').Ref<Array<object>>}
+ * @description Speichert die Liste der verfügbaren Spieler, die herausgefordert werden können.
+ */
 const availablePlayers = ref([]);
+
+/**
+ * @type {import('vue').Ref<number>}
+ * @description Speichert das vom Benutzer ausgewählte Spiellevel (1 oder 2).
+ */
 const selectedLevel = ref(1);
 const loading = ref(false);
 const error = ref(null);
@@ -16,18 +48,58 @@ async function fetchCurrentUser() {
   return await resp.json();
 }
 
+// BARRIEREFREIHEIT: Reaktive Variable für die Zoom-Stufe.
+const zoomLevel = ref(1);
+
+// BARRIEREFREIHEIT: Reaktive Variable zur Steuerung des Hochkontrastmodus.
+const isHighContrast = ref(false);
+
+// ==================================================================================
+// Computed Properties
+// ==================================================================================
+
+// BARRIEREFREIHEIT: Berechnete Eigenschaft, die ein Style-Objekt für die dynamische Skalierung (Zoom) zurückgibt.
+const containerStyle = computed(() => ({
+  zoom: zoomLevel.value
+}));
+
+// ==================================================================================
+// Methoden: Funktionen zur Handhabung von Benutzerinteraktionen und Geschäftslogik.
+// ==================================================================================
+
+/**
+ * @function challengePlayer
+ * @author Lisa
+ * @description Löst das 'start-game'-Event aus und übergibt die Details zum Gegner und zum Level an die Eltern-Komponente.
+ * @param {object} player - Das Spieler-Objekt des Gegners, der herausgefordert wird.
+ */
 function challengePlayer(player) {
   emit('start-game', { opponent: player, level: selectedLevel.value });
 }
 
+/**
+ * @function onHelpClick
+ * @author Lisa
+ * @description Löst das 'show-help'-Event aus, um die Hilfe-Ansicht anzuzeigen.
+ */
 function onHelpClick() {
   emit('show-help');
 }
 
+/**
+ * @function onHighscoresClick
+ * @author Lisa
+ * @description Löst das 'show-highscores'-Event aus, um die Highscore-Ansicht anzuzeigen.
+ */
 function onHighscoresClick() {
   emit('show-highscores');
 }
 
+/**
+ * @function logout
+ * @author Lisa
+ * @description Meldet den Benutzer ab, indem der Token aus dem Local Storage entfernt und zur Login-Seite weitergeleitet wird.
+ */
 function logout() {
   localStorage.removeItem(token);
   localStorage.removeItem('currentUserId');
@@ -41,6 +113,28 @@ function logout() {
   return await resp.json();
 }
 
+// BARRIEREFREIHEIT: Methoden zur Anpassung der Zoom-Stufe.
+function increaseZoom() {
+  zoomLevel.value += 0.1;
+}
+function decreaseZoom() {
+  zoomLevel.value -= 0.1;
+}
+
+// BARRIEREFREIHEIT: Methode zum Umschalten des Hochkontrastmodus.
+function toggleHighContrast() {
+  isHighContrast.value = !isHighContrast.value;
+}
+
+// ==================================================================================
+// Lifecycle Hooks: Funktionen, die Vue zu bestimmten Zeitpunkten im Lebenszyklus einer Komponente automatisch aufruft.
+// Verantwortlich: Dima (da der Hook die API-Logik auslöst)
+// ==================================================================================
+
+/**
+ * onMounted(): Wird ausgeführt, nachdem die Komponente in das DOM eingehängt wurde.
+ * Perfekt, um initiale Daten vom Server zu laden.
+ */
 onMounted(async () => {
   loading.value = true;
   try {
@@ -73,15 +167,31 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="bg-gray-100 min-h-screen font-sans">
+  <!-- 
+    Vue Template Grundlagen:
+    - @click:      Führt eine Methode aus, wenn auf das Element geklickt wird.
+    - :class:       Bindet Klassen dynamisch, z.B. um das Aussehen basierend auf dem Zustand zu ändern.
+    - v-for:        Erstellt eine Schleife über eine Liste (hier availablePlayers) und rendert für jeden Eintrag ein Element.
+    - :key:         Ein eindeutiger Schlüssel für jedes v-for-Element, wichtig für die Performance.
+    - v-if/v-else:  Zeigt Elemente nur an, wenn eine bestimmte Bedingung erfüllt (oder nicht erfüllt) ist.
+    - {{ ... }}:     Gibt den Wert einer Variable als Text aus (Interpolation).
+  -->
+  <div class="bg-gray-100 min-h-screen" :class="{ 'high-contrast': isHighContrast }">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
       <header class="flex flex-col sm:flex-row justify-between items-center mb-8">
         <div class="flex items-center gap-4 mb-4 sm:mb-0">
-          <img src="../assets/logo.svg" alt="Logo" class="h-16 w-auto">
+          <img src="../assets/logo.svg" alt="Logo" class="h-24 w-auto">
           <div class="text-2xl font-bold text-gray-800">Lobby</div>
         </div>
         <div class="flex items-center gap-4">
+          <!-- BARRIEREFREIHEIT: Steuerelemente für Zoom und Kontrast. -->
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-600">Zoom:</span>
+            <button @click="decreaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">-</button>
+            <button @click="increaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">+</button>
+          </div>
+          <button @click="toggleHighContrast" class="px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">Kontrast</button>
           <button @click="onHighscoresClick" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors">
             <TrophyIcon class="h-6 w-6" />
             <span>Highscores</span>
@@ -97,8 +207,9 @@ onMounted(async () => {
         </div>
       </header>
 
-      <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <main class="grid grid-cols-1 lg:grid-cols-3 gap-8" :style="containerStyle">
 
+        <!-- Spalte für Spieleinstellungen -->
         <div class="lg:col-span-1 bg-white rounded-2xl shadow-lg p-6">
           <h2 class="text-2xl font-bold text-gray-800 mb-6">Spieleinstellungen</h2>
 
@@ -119,6 +230,7 @@ onMounted(async () => {
             </div>
           </div>
 
+          <!-- Angemeldeter Benutzer -->
           <div class="mt-8 pt-6 border-t border-gray-200">
              <div class="flex items-center gap-4">
                 <div class="bg-gray-200 p-2 rounded-full">
@@ -133,6 +245,7 @@ onMounted(async () => {
 
         </div>
 
+        <!-- Spalte für verfügbare Spieler -->
         <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6">
           <div class="flex items-center gap-3 mb-6">
             <UsersIcon class="h-8 w-8 text-gray-500"/>
@@ -160,6 +273,7 @@ onMounted(async () => {
                 </button>
               </li>
             </ul>
+            <!-- Wird angezeigt, während die Spielerliste lädt -->
             <div v-else class="text-center text-gray-500 py-16">
               <p class="text-lg">Suche nach Spielern...</p>
             </div>
@@ -171,3 +285,54 @@ onMounted(async () => {
     </div>
   </div>
 </template>
+
+<style>
+/* BARRIEREFREIHEIT: Stile für den Hochkontrastmodus */
+.high-contrast {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+.high-contrast .bg-white, .high-contrast .bg-gray-50 {
+  background-color: #000 !important;
+  border: 2px solid yellow !important;
+}
+
+.high-contrast .text-gray-800,
+.high-contrast .text-gray-900,
+.high-contrast .text-gray-700,
+.high-contrast .text-gray-600,
+.high-contrast .text-gray-500,
+.high-contrast .text-gray-400 {
+  color: #fff !important;
+}
+
+.high-contrast .bg-gray-100 {
+    background-color: #000 !important;
+}
+
+.high-contrast .bg-gray-200 {
+    background-color: #333 !important;
+}
+
+.high-contrast button {
+    border: 1px solid yellow !important;
+}
+
+.high-contrast .text-blue-600 {
+    color: yellow !important;
+}
+
+.high-contrast .border-gray-200, .high-contrast .border-t {
+    border-color: yellow !important;
+}
+
+.high-contrast .bg-blue-50 {
+    background-color: #00008b !important; /* Dunkelblau */
+}
+
+.high-contrast .border-blue-500 {
+    border-color: yellow !important;
+}
+
+</style>
