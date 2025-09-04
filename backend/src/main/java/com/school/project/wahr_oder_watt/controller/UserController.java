@@ -55,9 +55,14 @@ public Map<String, Object> me(Authentication authentication) {
     dto.put("username", "unknown");
     return dto;
   }
-  // TODO: Echten User aus DB laden falls nötig
-  dto.put("id", 1L);
-  dto.put("username", authentication.getName());
+  User user = userService.findByUsername(authentication.getName());
+  if (user == null) {
+    dto.put("id", 0);
+    dto.put("username", "unknown");
+    return dto;
+  }
+  dto.put("id", user.getId());
+  dto.put("username", user.getUsername());
   return dto;
 }
 

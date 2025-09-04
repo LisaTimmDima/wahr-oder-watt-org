@@ -11,7 +11,7 @@ const error = ref(null);
 const token = computed(() => localStorage.getItem('jwt'));
 
 async function fetchCurrentUser() {
-  const resp = await fetch('/api/users/me', { headers: { 'Accept': 'application/json', token } });
+  const resp = await fetch('/api/users/me', { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token.value}` } });
   if (!resp.ok) throw new Error('Fehler beim Laden der Benutzer');
   return await resp.json();
 }
@@ -36,7 +36,7 @@ function logout() {
 }
 
   async function fetchUsers() {
-  const resp = await fetch('/api/users', { headers: { 'Accept': 'application/json', token } });
+  const resp = await fetch('/api/users', { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token.value}` } });
   if (!resp.ok) throw new Error('Fehler beim Laden der Benutzer');
   return await resp.json();
 }

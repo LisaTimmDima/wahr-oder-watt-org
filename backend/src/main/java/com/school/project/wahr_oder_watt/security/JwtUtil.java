@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.util.Date;
 import java.util.function.Function;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
@@ -13,8 +14,10 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class JwtUtil {
-  private final String secretKey = "geheimes_jwt_secret";
-  private final long jwtExpirationMs = 86400000; // 1 Tag in Millisekunden
+  @Value("${app.jwt.secret}")
+  private String secretKey;
+  @Value("${app.jwt.expiration}")
+  private long jwtExpirationMs; // 1 Tag in Millisekunden
 
   /** Generiert ein JWT-Token für den angegebenen Benutzernamen.
    *
