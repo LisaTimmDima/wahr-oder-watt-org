@@ -40,7 +40,7 @@ public class Duel {
   private List<User> players;
 
   /**
-   * mode gibt den Modus des Duells an (z.B. "Best of 3", "Best of 5").
+   * mode gibt den Modus des Duells an (z.B. "Speedrun", "Rundenduell").
    */
   @Enumerated(EnumType.STRING)
   private DuelMode mode;

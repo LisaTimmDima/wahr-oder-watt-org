@@ -73,4 +73,9 @@ public class DuelService {
   public void delete(Long id) {
     duelRepository.deleteById(id);
   }
+
+  public Duel instantiateDuel(Duel duel) {
+    //TODO: Logik zur Initialisierung eines neuen Duells
+    return duel;
+  }
 }
