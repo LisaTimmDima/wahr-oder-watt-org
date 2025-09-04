@@ -28,6 +28,9 @@ const stats = ref([
 // BARRIEREFREIHEIT: Reaktive Variable für die Zoom-Stufe.
 const zoomLevel = ref(1);
 
+// BARRIEREFREIHEIT: Reaktive Variable zur Steuerung des Hochkontrastmodus.
+const isHighContrast = ref(false);
+
 // ==================================================================================
 // Computed Properties
 // ==================================================================================
@@ -68,6 +71,11 @@ function decreaseZoom() {
   zoomLevel.value -= 0.1;
 }
 
+// BARRIEREFREIHEIT: Methode zum Umschalten des Hochkontrastmodus.
+function toggleHighContrast() {
+  isHighContrast.value = !isHighContrast.value;
+}
+
 </script>
 
 <template>
@@ -80,12 +88,15 @@ function decreaseZoom() {
       hier wird die Icon-Komponente aus dem `stat`-Objekt geladen.
     - {{ ... }}:    Gibt den Wert einer Variable als Text aus (Interpolation).
   -->
-  <div class="p-4 sm:p-6 bg-gray-100 min-h-full" :style="containerStyle">
-    <!-- BARRIEREFREIHEIT: Steuerelemente zur Anpassung der Zoom-Stufe. -->
-    <div class="text-right mb-4">
-      <span class="text-sm text-gray-600 mr-2">Zoom:</span>
-      <button @click="decreaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">-</button>
-      <button @click="increaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300 ml-1">+</button>
+  <div class="p-4 sm:p-6 bg-gray-100 min-h-full" :style="containerStyle" :class="{ 'high-contrast': isHighContrast }">
+    <!-- BARRIEREFREIHEIT: Steuerelemente für Zoom und Kontrast. -->
+    <div class="text-right mb-4 flex justify-end items-center gap-4">
+        <div>
+            <span class="text-sm text-gray-600 mr-2">Zoom:</span>
+            <button @click="decreaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">-</button>
+            <button @click="increaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300 ml-1">+</button>
+        </div>
+        <button @click="toggleHighContrast" class="px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">Kontrast</button>
     </div>
 
     <h1 class="text-3xl font-bold text-gray-800 mb-6">Admin Dashboard</h1>
@@ -106,3 +117,47 @@ function decreaseZoom() {
 
   </div>
 </template>
+
+<style>
+/* BARRIEREFREIHEIT: Stile für den Hochkontrastmodus */
+.high-contrast {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+.high-contrast .bg-gray-100 {
+    background-color: #000 !important;
+}
+
+.high-contrast .text-gray-800,
+.high-contrast .text-gray-600 {
+  color: #fff !important;
+}
+
+.high-contrast .bg-red-500 {
+    background-color: #990000 !important;
+    border: 2px solid yellow;
+}
+
+.high-contrast .bg-blue-500 {
+    background-color: #000099 !important;
+    border: 2px solid yellow;
+}
+
+.high-contrast .bg-yellow-500 {
+    background-color: #cccc00 !important;
+    color: #000 !important;
+    border: 2px solid blue;
+}
+
+.high-contrast .bg-yellow-500 .text-white {
+    color: #000 !important;
+}
+
+.high-contrast button {
+    border: 1px solid yellow !important;
+    background-color: #333 !important;
+    color: #fff !important;
+}
+
+</style>

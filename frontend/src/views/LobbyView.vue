@@ -41,6 +41,9 @@ const selectedLevel = ref(1);
 // BARRIEREFREIHEIT: Reaktive Variable für die Zoom-Stufe.
 const zoomLevel = ref(1);
 
+// BARRIEREFREIHEIT: Reaktive Variable zur Steuerung des Hochkontrastmodus.
+const isHighContrast = ref(false);
+
 // ==================================================================================
 // Computed Properties
 // ==================================================================================
@@ -123,6 +126,11 @@ function decreaseZoom() {
   zoomLevel.value -= 0.1;
 }
 
+// BARRIEREFREIHEIT: Methode zum Umschalten des Hochkontrastmodus.
+function toggleHighContrast() {
+  isHighContrast.value = !isHighContrast.value;
+}
+
 // ==================================================================================
 // Lifecycle Hooks: Funktionen, die Vue zu bestimmten Zeitpunkten im Lebenszyklus einer Komponente automatisch aufruft.
 // Verantwortlich: Dima (da der Hook die API-Logik auslöst)
@@ -147,7 +155,7 @@ onMounted(async () => {
     - v-if/v-else:  Zeigt Elemente nur an, wenn eine bestimmte Bedingung erfüllt (oder nicht erfüllt) ist.
     - {{ ... }}:     Gibt den Wert einer Variable als Text aus (Interpolation).
   -->
-  <div class="bg-gray-100 min-h-screen">
+  <div class="bg-gray-100 min-h-screen" :class="{ 'high-contrast': isHighContrast }">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
       <header class="flex flex-col sm:flex-row justify-between items-center mb-8">
@@ -156,12 +164,13 @@ onMounted(async () => {
           <div class="text-2xl font-bold text-gray-800">Lobby</div>
         </div>
         <div class="flex items-center gap-4">
-          <!-- BARRIEREFREIHEIT: Steuerelemente zur Anpassung der Zoom-Stufe. -->
+          <!-- BARRIEREFREIHEIT: Steuerelemente für Zoom und Kontrast. -->
           <div class="flex items-center gap-2">
             <span class="text-sm text-gray-600">Zoom:</span>
             <button @click="decreaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">-</button>
             <button @click="increaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">+</button>
           </div>
+          <button @click="toggleHighContrast" class="px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">Kontrast</button>
           <button @click="onHighscoresClick" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors">
             <TrophyIcon class="h-6 w-6" />
             <span>Highscores</span>
@@ -255,3 +264,54 @@ onMounted(async () => {
     </div>
   </div>
 </template>
+
+<style>
+/* BARRIEREFREIHEIT: Stile für den Hochkontrastmodus */
+.high-contrast {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+.high-contrast .bg-white, .high-contrast .bg-gray-50 {
+  background-color: #000 !important;
+  border: 2px solid yellow !important;
+}
+
+.high-contrast .text-gray-800,
+.high-contrast .text-gray-900,
+.high-contrast .text-gray-700,
+.high-contrast .text-gray-600,
+.high-contrast .text-gray-500,
+.high-contrast .text-gray-400 {
+  color: #fff !important;
+}
+
+.high-contrast .bg-gray-100 {
+    background-color: #000 !important;
+}
+
+.high-contrast .bg-gray-200 {
+    background-color: #333 !important;
+}
+
+.high-contrast button {
+    border: 1px solid yellow !important;
+}
+
+.high-contrast .text-blue-600 {
+    color: yellow !important;
+}
+
+.high-contrast .border-gray-200, .high-contrast .border-t {
+    border-color: yellow !important;
+}
+
+.high-contrast .bg-blue-50 {
+    background-color: #00008b !important; /* Dunkelblau */
+}
+
+.high-contrast .border-blue-500 {
+    border-color: yellow !important;
+}
+
+</style>

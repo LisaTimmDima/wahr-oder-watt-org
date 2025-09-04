@@ -45,6 +45,8 @@ const errorMessage = ref('');
 
 // BARRIEREFREIHEIT: Reaktive Variable für die Basisschriftgröße.
 const baseFontSize = ref(16);
+// BARRIEREFREIHEIT: Reaktive Variable zur Steuerung des Hochkontrastmodus.
+const isHighContrast = ref(false);
 
 // ==================================================================================
 // Computed Properties: Leiten Werte von reaktiven Variablen ab und aktualisieren sich effizient selbst.
@@ -231,6 +233,11 @@ function increaseFontSize() {
 function decreaseFontSize() {
   baseFontSize.value -= 2;
 }
+
+// BARRIEREFREIHEIT: Methode zum Umschalten des Hochkontrastmodus.
+function toggleHighContrast() {
+  isHighContrast.value = !isHighContrast.value;
+}
 </script>
 
 <template>
@@ -242,14 +249,19 @@ function decreaseFontSize() {
     - :class:        Bindet Klassen dynamisch basierend auf reaktiven Daten.
     - {{ ... }}:      Gibt den Wert einer Variable als Text aus (Interpolation).
   -->
-  <div class="bg-gray-100 min-h-screen flex items-center justify-center p-4" :style="containerStyle">
+  <div class="bg-gray-100 min-h-screen flex items-center justify-center p-4" :style="containerStyle" :class="{ 'high-contrast': isHighContrast }">
     <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
 
-      <!-- BARRIEREFREIHEIT: Steuerelemente zur Anpassung der Schriftgröße. -->
-      <div class="text-right mb-4">
-        <span class="text-sm text-gray-600 mr-2">Schriftgröße:</span>
-        <button @click="decreaseFontSize" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">-</button>
-        <button @click="increaseFontSize" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300 ml-1">+</button>
+      <!-- BARRIEREFREIHEIT: Steuerelemente für Schriftgröße und Kontrast. -->
+      <div class="text-right mb-4 flex justify-end items-center gap-4">
+        <div>
+          <span class="text-sm text-gray-600 mr-2">Schriftgröße:</span>
+          <button @click="decreaseFontSize" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">-</button>
+          <button @click="increaseFontSize" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300 ml-1">+</button>
+        </div>
+        <div>
+          <button @click="toggleHighContrast" class="px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">Kontrast</button>
+        </div>
       </div>
 
       <div class="text-center mb-8">
@@ -410,3 +422,63 @@ function decreaseFontSize() {
     </div>
   </div>
 </template>
+
+<style>
+/* BARRIEREFREIHEIT: Stile für den Hochkontrastmodus */
+.high-contrast {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+.high-contrast .bg-white {
+  background-color: #000 !important;
+  border: 2px solid yellow !important;
+}
+
+.high-contrast .text-gray-800,
+.high-contrast .text-gray-700,
+.high-contrast .text-gray-600,
+.high-contrast .text-gray-500,
+.high-contrast .text-gray-400 {
+  color: #fff !important;
+}
+
+.high-contrast .bg-gray-100 {
+    background-color: #000 !important;
+}
+
+.high-contrast .bg-gray-200 {
+    background-color: #333 !important;
+}
+
+.high-contrast button {
+    border: 1px solid yellow !important;
+}
+
+.high-contrast input {
+    background-color: #555 !important;
+    border: 1px solid yellow !important;
+    color: #fff !important;
+}
+
+.high-contrast .text-blue-600 {
+    color: yellow !important;
+}
+
+.high-contrast .bg-green-100 {
+    background-color: #000 !important;
+    border-color: lightgreen !important;
+}
+.high-contrast .text-green-700 {
+    color: lightgreen !important;
+}
+
+.high-contrast .bg-red-100 {
+    background-color: #000 !important;
+    border-color: red !important;
+}
+.high-contrast .text-red-700 {
+    color: red !important;
+}
+
+</style>

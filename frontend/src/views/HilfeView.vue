@@ -49,11 +49,19 @@ const faqs = ref([
     id: 'spielmodi',
     question: 'Spielmodi',
     answer: '<strong>Level 1:</strong> Speedrun 60 Sekunden Gesamtzeit, so viele Fragen wie möglich.<strong>Level 2:</strong> Runden-Duell 5 Runden, 10 Sekunden pro Runde.'
+  },
+  {
+    id: 'geräteundeigenschaften',
+    question: 'Erklärung von Symbole',
+    answer: '<strong>Geräte:</strong> <strong>Eigenschaften:</strong> '
   }
 ]);
 
 // BARRIEREFREIHEIT: Reaktive Variable für die Zoom-Stufe.
 const zoomLevel = ref(1);
+
+// BARRIEREFREIHEIT: Reaktive Variable zur Steuerung des Hochkontrastmodus.
+const isHighContrast = ref(false);
 
 // ==================================================================================
 // Computed Properties
@@ -95,6 +103,12 @@ function increaseZoom() {
 function decreaseZoom() {
   zoomLevel.value -= 0.1;
 }
+
+// BARRIEREFREIHEIT: Methode zum Umschalten des Hochkontrastmodus.
+function toggleHighContrast() {
+  isHighContrast.value = !isHighContrast.value;
+}
+
 </script>
 
 <template>
@@ -107,13 +121,16 @@ function decreaseZoom() {
     - v-show:       Ändert die Sichtbarkeit eines Elements (ähnlich v-if, aber schaltet nur CSS `display` um).
     - v-html:       Rendert rohes HTML. Nur für vertrauenswürdigen Inhalt verwenden, um XSS-Angriffe zu vermeiden.
   -->
-  <div class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4" :style="containerStyle">
+  <div class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4" :style="containerStyle" :class="{ 'high-contrast': isHighContrast }">
     <header class="w-full max-w-4xl mx-auto text-center mb-8">
-      <!-- BARRIEREFREIHEIT: Steuerelemente zur Anpassung der Zoom-Stufe. -->
-      <div class="text-right mb-4">
-        <span class="text-sm text-gray-600 mr-2">Zoom:</span>
-        <button @click="decreaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">-</button>
-        <button @click="increaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300 ml-1">+</button>
+      <!-- BARRIEREFREIHEIT: Steuerelemente für Zoom und Kontrast. -->
+      <div class="text-right mb-4 flex justify-end items-center gap-4">
+        <div>
+            <span class="text-sm text-gray-600 mr-2">Zoom:</span>
+            <button @click="decreaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">-</button>
+            <button @click="increaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300 ml-1">+</button>
+        </div>
+        <button @click="toggleHighContrast" class="px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">Kontrast</button>
       </div>
       <img src="../assets/logo.svg" alt="Wahr oder Watt Logo" class="mx-auto h-32 w-auto mb-6">
       <h1 class="text-5xl font-extrabold text-gray-800 tracking-tight">Hilfe & FAQ</h1>
@@ -167,7 +184,51 @@ function decreaseZoom() {
   </div>
 </template>
 
-<style scoped>
+<style>
+/* BARRIEREFREIHEIT: Stile für den Hochkontrastmodus */
+.high-contrast {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+.high-contrast .bg-white, .high-contrast .bg-gray-50, .high-contrast .bg-blue-600 {
+  background-color: #000 !important;
+  border: 2px solid yellow !important;
+}
+
+.high-contrast .text-gray-800,
+.high-contrast .text-gray-700,
+.high-contrast .text-gray-600,
+.high-contrast .text-gray-500,
+.high-contrast .text-xl,
+.high-contrast .text-white {
+  color: #fff !important;
+}
+
+.high-contrast .bg-gray-100 {
+    background-color: #000 !important;
+}
+
+.high-contrast .bg-gray-200 {
+    background-color: #333 !important;
+}
+
+.high-contrast button, .high-contrast a {
+    border: 1px solid yellow !important;
+}
+
+.high-contrast .text-blue-600 {
+    color: yellow !important;
+}
+
+.high-contrast .divide-y > :not([hidden]) ~ :not([hidden]) {
+    border-color: yellow !important;
+}
+
+.high-contrast .prose strong {
+    color: yellow !important;
+}
+
 /* Stellt sicher, dass die mit v-html gerenderten Inhalte die Textformatierung erben */
 .prose p {
   margin: 0;

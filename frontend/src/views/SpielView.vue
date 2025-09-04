@@ -18,11 +18,6 @@ const emit = defineEmits(['show-lobby']);
 // Props: Deklariert die Daten, die von der Eltern-Komponente (App.vue) an diese Komponente übergeben werden.
 // ==================================================================================
 const props = defineProps({
-  /**
-   * @property {object} gameDetails - Enthält die Details zum gestarteten Spiel.
-   * @property {object} gameDetails.opponent - Der Gegner, der herausgefordert wurde.
-   * @property {number} gameDetails.level - Das ausgewählte Spiellevel.
-   */
   gameDetails: {
     type: Object,
     required: true
@@ -31,47 +26,15 @@ const props = defineProps({
 
 // ==================================================================================
 // Reactive State: ref() erstellt reaktive Variablen für den Spielzustand.
-// Verantwortlich: Lisa
 // ==================================================================================
 
-/**
- * @type {import('vue').Ref<object>}
- * @description Speichert Zustand und Punktestand des angemeldeten Spielers.
- * @todo Sollte aus einem globalen State oder per API-Aufruf initialisiert werden.
- */
 const loggedInPlayer = ref({ name: 'Spieler 1', score: 0 });
-
-/**
- * @type {import('vue').Ref<number>}
- * @description Der Countdown-Timer für die aktuelle Runde oder das gesamte Spiel.
- */
 const timer = ref(0);
-
-/**
- * @type {import('vue').Ref<number>}
- * @description Zählt die aktuelle Spielrunde.
- */
 const currentRound = ref(1);
-
-/**
- * @type {number}
- * @description Maximale Anzahl der Runden im Runden-Duell Modus.
- */
 const maxRounds = 5;
-
-/**
- * @type {number | null}
- * @description Hält die ID des Intervalls für den Timer, um ihn später stoppen zu können.
- */
 let timerInterval = null;
-
-/**
- * @type {import('vue').Ref<object>}
- * @description Speichert die aktuell angezeigte Frage inklusive der Antwortmöglichkeiten.
- * @todo Fragen sollten von einer API geladen werden, anstatt hartkodiert zu sein.
- */
 const currentQuestion = ref({
-  item: { name: 'Monitor', icon: '🖥️' },
+  item: { name: 'Desktop-PC', icon: '🖥️' },
   answers: [
     { id: 'e1', icon: '🛜', text: 'WLAN' },
     { id: 'e2', icon: '🔌', text: 'Netzstecker' },
@@ -80,58 +43,27 @@ const currentQuestion = ref({
   ],
   correctAnswers: ['e2']
 });
-
-/**
- * @type {import('vue').Ref<Array<string>>}
- * @description Speichert die IDs der vom Benutzer ausgewählten Antworten.
- */
 const selectedAnswers = ref([]);
+
+// BARRIEREFREIHEIT: Reaktive Variablen für Zoom und Kontrast.
+const zoomLevel = ref(1);
+const isHighContrast = ref(false);
 
 // ==================================================================================
 // Computed Properties: Abgeleitete, reaktive Werte.
-// Verantwortlich: Lisa
 // ==================================================================================
 
-/**
- * @type {import('vue').ComputedRef<object>}
- * @description Greift auf den Gegner aus den übergebenen Props zu.
- */
 const opponentPlayer = computed(() => props.gameDetails.opponent);
-
-/**
- * @type {import('vue').ComputedRef<number>}
- * @description Greift auf das Level aus den übergebenen Props zu.
- */
 const level = computed(() => props.gameDetails.level);
-
-/**
- * @type {import('vue').ComputedRef<Function>}
- * @description Gibt eine Funktion zurück, die prüft, ob eine Antwort-ID ausgewählt wurde.
- * Nützlich, um im Template dynamisch Klassen zu binden.
- * @returns {Function} Eine Funktion, die eine `answerId` entgegennimmt und `true` oder `false` zurückgibt.
- */
 const isSelected = computed(() => {
   return (answerId) => selectedAnswers.value.includes(answerId);
 });
+const containerStyle = computed(() => ({ zoom: zoomLevel.value }));
 
 // ==================================================================================
 // Methoden: Funktionen zur Steuerung der Spiellogik.
 // ==================================================================================
 
-/**
- * @function fetchQuestion
- * @author Dima
- * @description (Zukünftige Funktion) Lädt eine neue Frage vom Server.
- * @todo Diese Funktion muss implementiert werden, um `currentQuestion` dynamisch zu füllen.
- */
-// async function fetchQuestion() { ... }
-
-/**
- * @function toggleAnswer
- * @author Lisa
- * @description Fügt eine Antwort zur Auswahl hinzu oder entfernt sie, wenn sie bereits ausgewählt wurde.
- * @param {string} answerId - Die ID der ausgewählten Antwort.
- */
 function toggleAnswer(answerId) {
   const index = selectedAnswers.value.indexOf(answerId);
   if (index === -1) {
@@ -141,13 +73,6 @@ function toggleAnswer(answerId) {
   }
 }
 
-/**
- * @function submitAnswers
- * @author Lisa
- * @description Wertet die ausgewählten Antworten aus, aktualisiert den Punktestand und startet die nächste Runde oder beendet das Spiel.
- * @param {boolean} [isTimeout=false] - Gibt an, ob die Antworten aufgrund eines Timeouts automatisch abgeschickt wurden.
- * @todo Die `alert()`-Nachrichten sollten durch benutzerfreundlichere UI-Elemente ersetzt werden.
- */
 function submitAnswers(isTimeout = false) {
   clearInterval(timerInterval);
 
@@ -169,19 +94,12 @@ function submitAnswers(isTimeout = false) {
   if (currentRound.value < maxRounds) {
     currentRound.value++;
     selectedAnswers.value = [];
-    // Hier sollte eine neue Frage geladen werden, z.B. mit fetchQuestion()
     startTimer();
   } else {
     alert(`Spiel beendet! Endstand: ${loggedInPlayer.value.score}`);
-    // Logik für das Spielende, z.B. zum Highscore senden.
   }
 }
 
-/**
- * @function startTimer
- * @author Lisa
- * @description Startet den Countdown-Timer für eine Runde. Die Dauer hängt vom Spiellevel ab.
- */
 function startTimer() {
   clearInterval(timerInterval);
   timer.value = level.value === 1 ? 60 : 10;
@@ -194,51 +112,49 @@ function startTimer() {
   }, 1000);
 }
 
-/**
- * @function goBackToLobby
- * @author Lisa
- * @description Löst ein Event aus, um zur Lobby zurückzukehren.
- */
 function goBackToLobby() {
   emit('show-lobby');
 }
 
+// BARRIEREFREIHEIT: Methoden
+function increaseZoom() {
+  zoomLevel.value += 0.1;
+}
+function decreaseZoom() {
+  zoomLevel.value -= 0.1;
+}
+function toggleHighContrast() {
+  isHighContrast.value = !isHighContrast.value;
+}
+
 // ==================================================================================
-// Lifecycle Hooks: Funktionen, die Vue zu bestimmten Zeitpunkten im Lebenszyklus einer Komponente aufruft.
-// Verantwortlich: Lisa
+// Lifecycle Hooks
 // ==================================================================================
 
-/**
- * onMounted(): Wird ausgeführt, nachdem die Komponente in das DOM eingehängt wurde.
- * Startet hier den Timer für das Spiel.
- */
 onMounted(() => {
   if (props.gameDetails) {
     startTimer();
   }
 });
 
-/**
- * onUnmounted(): Wird ausgeführt, bevor die Komponente aus dem DOM entfernt wird.
- * Stoppt den Timer, um Memory-Leaks und Fehler zu vermeiden.
- */
 onUnmounted(() => {
   clearInterval(timerInterval);
 });
 </script>
 
 <template>
-  <!-- 
-    Vue Template Grundlagen:
-    - @click:      Führt eine Methode aus, wenn auf das Element geklickt wird.
-    - :class:       Bindet Klassen dynamisch, z.B. um das Aussehen basierend auf dem Zustand zu ändern.
-    - v-for:        Erstellt eine Schleife über eine Liste und rendert für jeden Eintrag ein Element.
-    - :key:         Ein eindeutiger Schlüssel für jedes v-for-Element, wichtig für die Performance.
-    - {{ ... }}:     Gibt den Wert einer Variable als Text aus (Interpolation).
-  -->
-  <div class="bg-gray-100 min-h-screen flex flex-col p-2 sm:p-4">
+  <div class="bg-gray-100 min-h-screen flex flex-col p-2 sm:p-4" :style="containerStyle" :class="{ 'high-contrast': isHighContrast }">
     
     <header class="w-full max-w-4xl mx-auto">
+        <div class="flex justify-end items-center gap-4 mb-2">
+            <!-- BARRIEREFREIHEIT: Steuerelemente für Zoom und Kontrast. -->
+            <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-600">Zoom:</span>
+                <button @click="decreaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">-</button>
+                <button @click="increaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">+</button>
+            </div>
+            <button @click="toggleHighContrast" class="px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">Kontrast</button>
+        </div>
       <div class="flex justify-center items-center mb-2 relative">
         <button @click="goBackToLobby" data-test="back-to-lobby-button" class="absolute left-0 flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors">
           <ArrowUturnLeftIcon class="h-6 w-6" />
@@ -322,3 +238,26 @@ onUnmounted(() => {
 
   </div>
 </template>
+
+<style>
+.high-contrast {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+.high-contrast .bg-white, .high-contrast .bg-gray-50, .high-contrast .bg-blue-100 {
+  background-color: #000 !important;
+  border: 2px solid yellow;
+}
+.high-contrast .text-gray-800, .high-contrast .text-gray-700, .high-contrast .text-gray-600, .high-contrast .text-gray-500, .high-contrast .text-blue-600 {
+  color: #fff !important;
+}
+.high-contrast .bg-gray-100, .high-contrast .bg-gray-200 {
+    background-color: #333 !important;
+}
+.high-contrast button {
+    border: 1px solid yellow !important;
+}
+.high-contrast .border-blue-500 {
+    border-color: yellow !important;
+}
+</style>
