@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import {ref, onMounted, computed} from 'vue';
 import { UserCircleIcon, ArrowUturnLeftIcon } from '@heroicons/vue/24/solid';
 
 const emit = defineEmits(['show-lobby']);
@@ -7,6 +7,8 @@ const loading = ref(false);
 const loadError = ref(null);
 const highscores = ref([]);
 const loggedInUser = ref({ id: null, name: '' }); // Platzhalter für
+const token = computed(() => localStorage.getItem('jwt'));
+
 // den aktuell eingeloggten Benutzer
 
 function applyRanking(list) {
@@ -15,25 +17,37 @@ function applyRanking(list) {
       .map((h, i) => ({ ...h, rank: i + 1 }));
 }
 
+/**
+ * @function fetchHighscores
+ * @author Dima
+ * @description Ruft die Highscore-Daten vom Server ab, normalisiert die Datenstruktur und aktualisiert den reaktiven State.
+ * @param {AbortController} [controller=new AbortController()] - Ein AbortController, um den Fetch-Request bei Bedarf abbrechen zu können.
+ */
 async function fetchHighscores(controller = new AbortController()) {
   loading.value = true;
   loadError.value = null;
   try {
     const resp = await fetch('/api/highscores', {
-      headers: { Accept: 'application/json' },
+      headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token.value}` },
       credentials: 'include',
       signal: controller.signal
     });
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    if (!resp.ok) throw new Error(`Daten konnten nicht geladen werden (HTTP ${resp.status})`);
     const data = await resp.json();
-    console.log('Highscores raw:', data);
+
+    // Normalisiert die Daten, da die API anscheinend unterschiedliche Schlüssel für den Benutzernamen liefert.
+    // Dies sorgt für eine konsistente Datenstruktur in der Frontend-Logik.
     const normalized = (Array.isArray(data) ? data : []).map(h => ({
       name: h.username ?? h.userName ?? h.name ?? h.id ?? 'Unbekannt',
       score: h.score ?? 0
     }));
+
     highscores.value = applyRanking(normalized);
+
   } catch (e) {
-    loadError.value = e.message;
+    if (e.name !== 'AbortError') {
+      loadError.value = e.message;
+    }
     highscores.value = [];
   } finally {
     loading.value = false;
@@ -41,7 +55,7 @@ async function fetchHighscores(controller = new AbortController()) {
 }
 
 onMounted(() => {
-  fetchHighscores();
+fetchHighscores();
 });
 
 function goBackToLobby() {
