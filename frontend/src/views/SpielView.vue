@@ -36,12 +36,12 @@ let timerInterval = null;
 const currentQuestion = ref({
   item: { name: 'Desktop-PC', icon: '🖥️' },
   answers: [
-    { id: 'e1', icon: '🛜', text: 'WLAN' },
-    { id: 'e2', icon: '🔌', text: 'Netzstecker' },
-    { id: 'e3', icon: '📀', text: 'CD-Laufwerk' },
-    { id: 'e4', icon: '⌨️', text: 'Tastatur' },
+    { id: 'e1', icon: '🛜'},
+    { id: 'e2', icon: '🔌'},
+    { id: 'e3', icon: '📀'},
+    { id: 'e4', icon: '⌨️'},
   ],
-  correctAnswers: ['e2']
+  correctAnswers: ['e2', 'e4']
 });
 const selectedAnswers = ref([]);
 
