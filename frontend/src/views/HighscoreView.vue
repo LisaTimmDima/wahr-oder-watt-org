@@ -36,6 +36,11 @@ const loadError = ref(null);
  * @description Speichert die verarbeitete und sortierte Liste der Highscores.
  */
 const highscores = ref([]);
+const loggedInUser = ref({ id: null, name: '' }); // Platzhalter für
+const token = computed(() => localStorage.getItem('jwt'));
+
+// den aktuell eingeloggten Benutzer
+
 
 /**
  * @type {import('vue').Ref<object>}
@@ -88,13 +93,12 @@ async function fetchHighscores(controller = new AbortController()) {
   loadError.value = null;
   try {
     const resp = await fetch('/api/highscores', {
-      headers: { Accept: 'application/json' },
+      headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token.value}` },
       credentials: 'include',
       signal: controller.signal
     });
     if (!resp.ok) throw new Error(`Daten konnten nicht geladen werden (HTTP ${resp.status})`);
     const data = await resp.json();
-    
     // Normalisiert die Daten, da die API anscheinend unterschiedliche Schlüssel für den Benutzernamen liefert.
     // Dies sorgt für eine konsistente Datenstruktur in der Frontend-Logik.
     const normalized = (Array.isArray(data) ? data : []).map(h => ({
@@ -146,12 +150,13 @@ function toggleHighContrast() {
  * Ruft die Highscores ab, sobald die Ansicht sichtbar wird.
  */
 onMounted(() => {
-  fetchHighscores();
+fetchHighscores();
 });
 
 </script>
 
 <template>
+
   <!-- 
     Vue Template Grundlagen:
     - v-for:      Erstellt eine Schleife über die `highscores`-Liste.
@@ -182,7 +187,6 @@ onMounted(() => {
         <div>User</div>
         <div class="text-right">Score</div>
       </div>
-      
       <!-- Ladezustand -->
       <div v-if="loading" class="p-8 text-center text-gray-500">
         <p>Lade Highscores...</p>
@@ -221,9 +225,9 @@ onMounted(() => {
     </main>
 
     <footer class="w-full max-w-2xl mx-auto mt-8 text-center">
-      <button 
-        @click="goBackToLobby" 
-        class="inline-flex items-center gap-2 bg-white text-gray-800 font-bold py-3 px-8 rounded-full shadow-md hover:bg-gray-200 transition-transform transform hover:-translate-y-1"
+      <button
+          @click="goBackToLobby"
+          class="inline-flex items-center gap-2 bg-white text-gray-800 font-bold py-3 px-8 rounded-full shadow-md hover:bg-gray-200 transition-transform transform hover:-translate-y-1"
       >
         <ArrowUturnLeftIcon class="h-5 w-5" />
         <span>Zurück zur Lobby</span>
