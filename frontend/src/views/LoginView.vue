@@ -29,6 +29,7 @@ const API_URL_REGISTER = '/api/auth/register';
 // ==================================================================================
 const emit = defineEmits(['login-successful', 'admin-login-successful']);
 
+
 // ==================================================================================
 // Reactive State: ref() erstellt reaktive Variablen, deren Änderungen die UI automatisch aktualisieren.
 // ==================================================================================
@@ -48,6 +49,7 @@ const baseFontSize = ref(16);
 // BARRIEREFREIHEIT: Reaktive Variable zur Steuerung des Hochkontrastmodus.
 const isHighContrast = ref(false);
 
+
 // ==================================================================================
 // Computed Properties: Leiten Werte von reaktiven Variablen ab und aktualisieren sich effizient selbst.
 // ==================================================================================
@@ -62,6 +64,13 @@ const currentTitle = computed(() => {
     default: return 'Wahr oder Watt?';
   }
 });
+
+function resetMessages() {
+  errorMessage.value = '';
+  // notificationMessage nur leeren, wenn sinnvoll:
+  // notificationMessage.value = '';
+}
+
 
 // BARRIEREFREIHEIT: Berechnete Eigenschaft, die ein Style-Objekt für die dynamische Schriftgröße zurückgibt.
 const containerStyle = computed(() => ({
@@ -140,23 +149,6 @@ function handlePasswordReset() {
   switchMode(VIEW_MODES.USER_LOGIN);
 }
 
-/**
- * @function performLogin
- * @author Dima
- * @description Führt eine Anmeldeanfrage an den Server aus.
- */
-async function performLogin(url, payload) {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'Anmeldung fehlgeschlagen. Überprüfen Sie Ihre Eingaben.' }));
-    throw new Error(errorData.message || 'Anmeldung fehlgeschlagen.');
-  }
-  return response.text();
-}
 
 /**
  * @function handleLogin
@@ -164,26 +156,34 @@ async function performLogin(url, payload) {
  * @description Behandelt den Anmeldevorgang für Benutzer und Admins.
  */
 async function handleLogin() {
-  clearMessages();
-  let url, payload, successEvent;
-  if (mode.value === VIEW_MODES.USER_LOGIN) {
-    url = API_URL_LOGIN;
-    payload = { email: email.value, password: password.value };
-    successEvent = 'login-successful';
-  } else if (mode.value === VIEW_MODES.ADMIN_LOGIN) {
-    url = API_URL_ADMIN_LOGIN;
-    payload = { username: adminLoginName.value, password: adminPassword.value };
-    successEvent = 'admin-login-successful';
-  } else {
-    return;
-  }
+  resetMessages();
+  const url = '/api/auth/login';
+  const urladmin = '/api/auth/login_admin';
+  let payload;
   try {
-    const token = await performLogin(url, payload);
-    localStorage.setItem('jwt', token);
-    emit(successEvent);
-  } catch (error) {
-    setErrorMessage(error.message);
-    console.error('Fehler bei der Anmeldung:', error);
+    if (mode.value === 'user-login') {
+      payload = { email: email.value, password: password.value };
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+        , body: JSON.stringify(payload) });
+      if (!response.ok) throw new Error('Login fehlgeschlagen');
+      const token = await response.text();
+      localStorage.setItem('jwt', token);
+      emit('login-successful');
+    } else if (mode.value === 'admin-login') {
+      payload = { username: adminLoginName.value, password: adminPassword.value };
+      const response = await fetch(urladmin, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+        , body: JSON.stringify(payload) });
+      if (!response.ok) throw new Error('Login fehlgeschlagen');
+      const token = await response.text();
+      localStorage.setItem('jwt', token);
+      emit('admin-login-successful');
+    }
+  } catch (e) {
+    errorMessage.value = e.message || 'Unbekannter Fehler';
   }
 }
 
@@ -305,7 +305,7 @@ function toggleHighContrast() {
          <button @click="switchMode(VIEW_MODES.USER_LOGIN)" class="w-full bg-gray-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-700 transition-colors">Zurück zur Anmeldung</button>
          <button @click="mode = VIEW_MODES.RESET_PASSWORD" class="mt-4 text-xs text-gray-400 underline">(Entwickler-Shortcut: Passwort jetzt zurücksetzen)</button>
       </div>
-      
+     
       <!-- Modus: Passwort zurücksetzen -->
       <form v-else-if="mode === VIEW_MODES.RESET_PASSWORD" @submit.prevent="handlePasswordReset">
         <p class="text-center text-gray-600 mb-6">Ihr neues Passwort muss sich von Ihrem bisherigen Passwort unterscheiden und mindestens 8 Zeichen lang sein.</p>

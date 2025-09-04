@@ -3,8 +3,8 @@ package com.school.project.wahr_oder_watt.controller;
 import com.school.project.wahr_oder_watt.dto.RegisterRequest;
 import com.school.project.wahr_oder_watt.dto.LoginRequest;
 import com.school.project.wahr_oder_watt.dto.AdminLoginRequest;
-import com.school.project.wahr_oder_watt.security.JwtUtil;
 import com.school.project.wahr_oder_watt.service.UserService;
+import com.school.project.wahr_oder_watt.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import com.school.project.wahr_oder_watt.model.User;
 
 /**
@@ -29,7 +28,7 @@ import com.school.project.wahr_oder_watt.model.User;
 public class AuthController {
 
   private final AuthenticationManager authenticationManager;
-  private final JwtUtil jwtUtil;
+  private final JwtService jwtService;
   private final UserService userService;
 
   /**
@@ -44,7 +43,7 @@ public class AuthController {
         new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
     );
     UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-    String token = jwtUtil.generateToken(userDetails.getUsername());
+    String token = jwtService.generateToken(userDetails.getUsername());
     return ResponseEntity.ok(token);
   }
   @PostMapping("/login_admin")
@@ -58,14 +57,14 @@ public class AuthController {
       if (user == null || !user.isAdmin()) {
           return ResponseEntity.status(403).body("Kein Admin-Zugang!");
       }
-      String token = jwtUtil.generateToken(userDetails.getUsername());
+      String token = jwtService.generateToken(userDetails.getUsername());
       return ResponseEntity.ok(token);
   }
 
   @PostMapping("/register")
   public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
     userService.registerNewUser(request);
-    String token = jwtUtil.generateToken(request.getUsername());
+    String token = jwtService.generateToken(request.getUsername());
     return ResponseEntity.ok(token);
   }
 }

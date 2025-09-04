@@ -1,4 +1,5 @@
 <script setup>
+
 // ==================================================================================
 // Verantwortlichkeiten:
 // - Lisa: UI-Struktur, Layout, State-Management und Event-Handling.
@@ -24,7 +25,7 @@ const emit = defineEmits(['start-game', 'show-help', 'show-highscores']);
  * @description Speichert die Informationen des aktuell angemeldeten Benutzers.
  * @todo Aktuell hartkodiert. Sollte durch einen API-Aufruf ersetzt werden.
  */
-const loggedInUser = ref({ id: 1, name: 'Spieler 1' });
+const loggedInUser = ref({ id: 0, name: 'Lädt...' });
 
 /**
  * @type {import('vue').Ref<Array<object>>}
@@ -37,6 +38,15 @@ const availablePlayers = ref([]);
  * @description Speichert das vom Benutzer ausgewählte Spiellevel (1 oder 2).
  */
 const selectedLevel = ref(1);
+const loading = ref(false);
+const error = ref(null);
+const token = computed(() => localStorage.getItem('jwt'));
+
+async function fetchCurrentUser() {
+  const resp = await fetch('/api/users/me', { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token.value}` } });
+  if (!resp.ok) throw new Error('Fehler beim Laden der Benutzer');
+  return await resp.json();
+}
 
 // BARRIEREFREIHEIT: Reaktive Variable für die Zoom-Stufe.
 const zoomLevel = ref(1);
@@ -91,31 +101,16 @@ function onHighscoresClick() {
  * @description Meldet den Benutzer ab, indem der Token aus dem Local Storage entfernt und zur Login-Seite weitergeleitet wird.
  */
 function logout() {
-  localStorage.removeItem('token');
-  window.location.href = '/login'; // Leitet die Seite neu, um den Zustand zurückzusetzen.
+  localStorage.removeItem(token);
+  localStorage.removeItem('currentUserId');
+  localStorage.removeItem('currentUsername');
+  window.location.href = '/login';
 }
 
-/**
- * @function fetchAvailablePlayers
- * @author Dima
- * @description Ruft die Liste der verfügbaren Spieler vom Server ab.
- * @returns {Promise<Array<object>>} - Ein Promise, das eine Liste von Spieler-Objekten zurückgibt.
- * @todo Aktuell nur eine Simulation. Muss durch einen echten fetch-API-Aufruf ersetzt werden.
- */
-async function fetchAvailablePlayers() {
-  console.log("Rufe verfügbare Spieler ab...");
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve([
-        { id: 2, name: 'Spieler 2' },
-        { id: 3, name: 'Spieler 3' },
-        { id: 4, name: 'Spieler 4' },
-        { id: 5, name: 'Spieler 5' },
-        { id: 6, name: 'Spieler 6' },
-        { id: 7, name: 'Spieler 7' },
-      ]);
-    }, 500);
-  });
+  async function fetchUsers() {
+  const resp = await fetch('/api/users', { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token.value}` } });
+  if (!resp.ok) throw new Error('Fehler beim Laden der Benutzer');
+  return await resp.json();
 }
 
 // BARRIEREFREIHEIT: Methoden zur Anpassung der Zoom-Stufe.
@@ -141,7 +136,33 @@ function toggleHighContrast() {
  * Perfekt, um initiale Daten vom Server zu laden.
  */
 onMounted(async () => {
-  availablePlayers.value = await fetchAvailablePlayers();
+  loading.value = true;
+  try {
+    // Aktuellen User laden (Backend) mit Fallback auf localStorage
+    try {
+      const me = await fetchCurrentUser();
+      loggedInUser.value = {
+        id: me.id,
+        name: me.username,
+      };
+    } catch (e) {
+      loggedInUser.value = {
+        id: Number(localStorage.getItem('currentUserId')),
+        name: localStorage.getItem('currentUsername')
+      };
+    }
+    const all = await fetchUsers();
+    availablePlayers.value = all
+        .filter(u => u.id !== loggedInUser.value.id)
+        .map(u => ({
+          id: u.id,
+          name: u.username,
+        }));
+  } catch (e) {
+    error.value = e.message;
+  } finally {
+    loading.value = false;
+  }
 });
 </script>
 
@@ -191,16 +212,16 @@ onMounted(async () => {
         <!-- Spalte für Spieleinstellungen -->
         <div class="lg:col-span-1 bg-white rounded-2xl shadow-lg p-6">
           <h2 class="text-2xl font-bold text-gray-800 mb-6">Spieleinstellungen</h2>
-          
+
           <div class="space-y-4">
-            <div 
+            <div
               @click="selectedLevel = 1"
               :class="['p-4 rounded-xl border-2 cursor-pointer transition-all', selectedLevel === 1 ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300']"
             >
               <h3 class="font-bold text-lg text-gray-800">Level 1: Speedrun</h3>
               <p class="text-gray-600 text-sm">60 Sekunden Gesamtzeit, so viele Fragen wie möglich.</p>
             </div>
-            <div 
+            <div
               @click="selectedLevel = 2"
               :class="['p-4 rounded-xl border-2 cursor-pointer transition-all', selectedLevel === 2 ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300']"
             >
