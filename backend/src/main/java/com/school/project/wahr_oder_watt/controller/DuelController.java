@@ -2,8 +2,6 @@ package com.school.project.wahr_oder_watt.controller;
 
 import com.school.project.wahr_oder_watt.dto.DuelDto;
 import com.school.project.wahr_oder_watt.model.Duel;
-import com.school.project.wahr_oder_watt.model.DuelMode;
-import com.school.project.wahr_oder_watt.model.DuelStatus;
 import com.school.project.wahr_oder_watt.service.DuelService;
 import java.text.ParseException;
 import lombok.RequiredArgsConstructor;
