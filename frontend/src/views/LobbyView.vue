@@ -41,6 +41,7 @@ const selectedLevel = ref(1);
 const loading = ref(false);
 const error = ref(null);
 const token = computed(() => localStorage.getItem('jwt'));
+let challenger = ref(null);
 
 async function fetchCurrentUser() {
   const resp = await fetch('/api/users/me', { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token.value}` } });
@@ -67,14 +68,45 @@ const containerStyle = computed(() => ({
 // Methoden: Funktionen zur Handhabung von Benutzerinteraktionen und Geschäftslogik.
 // ==================================================================================
 
+async function createDuel(player) {
+  if (!challenger.value) throw new Error('Eigenes Profil nicht geladen');
+  if (!token.value) throw new Error('Kein Token vorhanden');
+  const payload = {
+    challengerId: challenger.value.id,
+    opponentId: player.id,
+    level: selectedLevel.value,
+    currentTime: Date.now()
+  };
+  const resp = await fetch('/api/duels', {
+    method: 'POST',
+    headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token.value}` },
+    body: JSON.stringify(payload)
+  });
+  if (!resp.ok) {
+    const txt = await resp.text().catch(() => '');
+    throw new Error('Duell konnte nicht erstellt werden: ' + resp.status + ' ' + txt);
+  }
+  return resp.json(); // angenommen Backend gibt Duel-Objekt zurück
+}
 /**
  * @function challengePlayer
  * @author Lisa
  * @description Löst das 'start-game'-Event aus und übergibt die Details zum Gegner und zum Level an die Eltern-Komponente.
  * @param {object} player - Das Spieler-Objekt des Gegners, der herausgefordert wird.
  */
-function challengePlayer(player) {
-  emit('start-game', { opponent: player, level: selectedLevel.value });
+async function challengePlayer(player) {
+  try {
+    const duel = await createDuel(player);
+    emit('start-game', {
+      duel,
+      opponent: player.id,
+      me: challenger.value.id,
+      level: selectedLevel.value
+    });
+  } catch (e) {
+    console.error(e);
+    alert(e.message);
+  }
 }
 
 /**
@@ -140,11 +172,12 @@ onMounted(async () => {
   try {
     // Aktuellen User laden (Backend) mit Fallback auf localStorage
     try {
-      const me = await fetchCurrentUser();
+     const me = await fetchCurrentUser();
       loggedInUser.value = {
         id: me.id,
         name: me.username,
       };
+      challenger.value = me;
     } catch (e) {
       loggedInUser.value = {
         id: Number(localStorage.getItem('currentUserId')),
