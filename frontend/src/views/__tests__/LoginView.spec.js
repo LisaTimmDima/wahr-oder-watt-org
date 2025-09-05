@@ -1,6 +1,7 @@
 // ==================================================================================
 // Verantwortlichkeiten:
 // - Lisa: Tests für die LoginView.vue-Komponente.
+// - Dima: API-Tests
 // ==================================================================================
 
 // 'mount' von '@vue/test-utils' wird verwendet, um Vue-Komponenten in Tests zu rendern.
@@ -9,7 +10,7 @@ import { mount } from '@vue/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Importiert die zu testende Vue-Komponente.
-import LoginView from '../LoginView.vue';
+import LoginView from '../LoginView.vue'
 
 // --- Mock für localStorage ---
 // Da Tests in einer Node.js-Umgebung laufen, ist das 'localStorage'-Objekt des Browsers nicht verfügbar.
@@ -83,7 +84,7 @@ describe('LoginView.vue', () => {
     });
   });
 
-  // --- Tests für den initialen Zustand und das Rendering ---
+  // --- Test für den initialen Zustand und das Rendering ---
   describe('Initial State & Rendering', () => {
     // Testet, ob das Benutzer-Login-Formular standardmäßig korrekt angezeigt wird.
     it('renders the user login form by default', () => {
@@ -94,7 +95,7 @@ describe('LoginView.vue', () => {
     });
   });
 
-  // --- Tests für den Wechsel zwischen den verschiedenen Modi (Login, Admin, Registrierung etc.) ---
+  // --- Tests für den Wechsel zwischen den verschiedenen Modi (Login, Registrierung) ---
   describe('Mode Switching', () => {
     // Testet den Wechsel zum Admin-Login-Formular.
     it('switches to admin login form', async () => {
