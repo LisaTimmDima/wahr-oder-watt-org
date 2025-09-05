@@ -4,8 +4,6 @@ name: Frontend ci
 on:
   push:
     branches: [ "frontend/testing" ]
-    paths:
-      - frontend/**
   pull_request:
     branches: [ "branch" ]
     paths:
