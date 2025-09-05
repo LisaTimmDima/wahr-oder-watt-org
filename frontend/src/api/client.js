@@ -139,11 +139,6 @@ export async function login({ username, password }) {
   return data;
 }
 
-export function logout() {
-  clearAuth();
-  navigateToLogin();
-}
-
 // Optional: Health-Check ohne Auth
 export function ping() {
   return request('/public/ping', { auth: false }).catch(() => null);
