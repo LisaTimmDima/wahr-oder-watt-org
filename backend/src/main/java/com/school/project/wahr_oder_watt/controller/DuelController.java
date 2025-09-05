@@ -41,13 +41,13 @@ public class DuelController {
    * Erstellt ein neues Duell.
    */
   @PostMapping
-  public ResponseEntity<Duel> createDuel(@RequestBody DuelDto duelDto) throws ParseException {
+  public ResponseEntity<Duel> createDuel(@RequestBody DuelDto duelDto) {
     Long challengerId = duelDto.getChallengerId();
     Long opponentId = duelDto.getOpponentId();
-    String modeName = duelDto.getModeName();
-    String starttime = duelDto.getStarttime();
+    int level = duelDto.getLevel();
+    long currentTime = duelDto.getCurrentTime();
 
-    Duel duel = duelService.instantiateDuel(challengerId, opponentId, modeName, starttime);
+    Duel duel = duelService.instantiateDuel(challengerId, opponentId, level, currentTime);
     duel = duelService.save(duel);
     return ResponseEntity.ok(duel);
   }

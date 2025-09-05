@@ -24,11 +24,11 @@ public class DuelDto {
   /**
    * Name des Spielmodus (z.B. "Speedrun", "Rundenduell")
    */
-  private String modeName;
+  private int level;
 
   /**
    * Startzeit des Duells im Format "YYYY-MM-DD HH:MM:SS"
    */
-  private String starttime;
+  private long currentTime;
 
 }

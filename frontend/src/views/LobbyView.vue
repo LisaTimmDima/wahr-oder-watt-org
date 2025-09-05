@@ -79,7 +79,7 @@ async function createDuel(player) {
   };
   const resp = await fetch('/api/duels', {
     method: 'POST',
-    headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token.value}` },
+    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': `Bearer ${token.value}` },
     body: JSON.stringify(payload)
   });
   if (!resp.ok) {
