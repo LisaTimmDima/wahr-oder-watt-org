@@ -1,6 +1,5 @@
 package com.school.project.wahr_oder_watt.dto;
 
-import com.school.project.wahr_oder_watt.model.User;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,9 +12,14 @@ import lombok.Setter;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class DuelDto {
   /**
-   * Liste der Spieler im Duell
+   * ID des Herausfordernden im Duell
    */
-  private List<User> players;
+  private String challengerId;
+
+  /**
+   * ID des Herausgeforderten im Duell
+   */
+  private String opponentId;
 
   /**
    * Name des Spielmodus (z.B. "Speedrun", "Rundenduell")

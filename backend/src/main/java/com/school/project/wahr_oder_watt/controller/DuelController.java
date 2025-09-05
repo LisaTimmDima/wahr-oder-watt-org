@@ -40,6 +40,7 @@ public class DuelController {
    */
   @PostMapping
   public ResponseEntity<Duel> createDuel(@RequestBody Duel duel) {
+
     Duel created = duelService.save(duel);
     return ResponseEntity.ok(created);
   }
