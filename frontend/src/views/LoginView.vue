@@ -255,7 +255,7 @@ function toggleHighContrast() {
       <!-- BARRIEREFREIHEIT: Steuerelemente für Schriftgröße und Kontrast. -->
       <div class="text-right mb-4 flex justify-end items-center gap-4">
         <div>
-          <span class="text-sm text-gray-600 mr-2">Schriftgröße:</span>
+          <span class="text-sm text-gray-600 mr-2">Zoom:</span>
           <button @click="decreaseFontSize" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">-</button>
           <button @click="increaseFontSize" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300 ml-1">+</button>
         </div>
