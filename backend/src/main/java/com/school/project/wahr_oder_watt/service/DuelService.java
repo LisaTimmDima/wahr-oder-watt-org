@@ -1,7 +1,11 @@
 package com.school.project.wahr_oder_watt.service;
 
 import com.school.project.wahr_oder_watt.model.Duel;
+import com.school.project.wahr_oder_watt.model.DuelMode;
+import com.school.project.wahr_oder_watt.model.DuelStatus;
 import com.school.project.wahr_oder_watt.repository.DuelRepository;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +19,9 @@ import java.util.List;
 public class DuelService {
 
   private final DuelRepository duelRepository;
+  private final UserService userService;
+  private final DuelMode duelMode;
+  private final DuelStatus duelStatus;
 
   /**
    * Gibt alle Duelle zurück.
@@ -74,8 +81,32 @@ public class DuelService {
     duelRepository.deleteById(id);
   }
 
-  public Duel instantiateDuel(Duel duel) {
-    //TODO: Logik zur Initialisierung eines neuen Duells
+  /**
+   * Instanziiert ein neues Duell mit den gegebenen Parametern.
+   *
+   * @param challengerId ID des Herausfordernden.
+   * @param opponentId ID des Herausgeforderten.
+   * @param modeName Name des Spielmodus (z.B. "Speedrun", "Rundenduell").
+   * @param starttime Startzeit des Duells im Format "yyyy-MM-dd HH:mm:ss".
+   * @return Das instanziierte Duell.
+   * @throws ParseException falls die Startzeit nicht im korrekten Format ist.
+   */
+  public Duel instantiateDuel(Long challengerId, Long opponentId,
+      String modeName, String starttime) throws ParseException {
+    /**
+     * Formatter zum Parsen des Datums im Format "yyyy-MM-dd HH:mm:ss"
+     */
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    /**
+     * Instanziiert ein neues Duell mit den übergebenen Parametern.
+     */
+    Duel duel = new Duel();
+    duel.getPlayers().add(userService.findById(challengerId));
+    duel.getPlayers().add(userService.findById(opponentId));
+    duel.setMode(modeName.equals("Speedrun") ? DuelMode.SPEEDRUN : DuelMode.RUNDENDUELL);
+    duel.setPlaytime(formatter.parse(starttime));
+    duel.setStatus(DuelStatus.RUNNING);
     return duel;
   }
 }

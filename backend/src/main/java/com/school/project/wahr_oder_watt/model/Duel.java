@@ -57,7 +57,6 @@ public class Duel {
   @Enumerated(EnumType.STRING)
   private DuelStatus status;
 
-  //TODO: Richtige Implementierung
   /**
    * playtime gibt die Zeit an, wie lange das Duell verläuft.
    */

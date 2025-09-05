@@ -14,12 +14,12 @@ public class DuelDto {
   /**
    * ID des Herausfordernden im Duell
    */
-  private String challengerId;
+  private Long challengerId;
 
   /**
    * ID des Herausgeforderten im Duell
    */
-  private String opponentId;
+  private Long opponentId;
 
   /**
    * Name des Spielmodus (z.B. "Speedrun", "Rundenduell")
