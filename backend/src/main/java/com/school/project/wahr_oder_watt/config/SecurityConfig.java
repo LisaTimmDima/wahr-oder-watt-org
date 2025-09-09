@@ -62,7 +62,7 @@ public class SecurityConfig {
         .authenticationProvider(authenticationProvider)
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/auth/**", "/api/auth/**", "/", "/favicon.ico", "/static/**").permitAll()
+            .requestMatchers("/auth/**", "/api/auth/**", "/favicon.ico").permitAll()
             .anyRequest().authenticated()
         )
         .httpBasic(AbstractHttpConfigurer::disable)
