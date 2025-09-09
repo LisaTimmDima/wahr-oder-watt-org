@@ -28,6 +28,7 @@ RUN mvn dependency:go-offline
 COPY backend/ .
 # Copy frontend build into backend resources
 COPY --from=frontend-build /app/frontend/dist src/main/resources/static/
+RUN ls -l src/main/resources/static/ # Add this line for debugging
 RUN mvn package -DskipTests
 
 # -------------------------
@@ -45,7 +46,3 @@ ENV PORT=8080
 ENTRYPOINT ["java","-jar","app.jar"]
 
 
-# port
-ENV PORT=8080
-
-ENTRYPOINT ["java","-jar","app.jar"]
