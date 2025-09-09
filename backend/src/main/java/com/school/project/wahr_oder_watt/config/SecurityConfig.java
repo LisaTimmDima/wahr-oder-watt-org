@@ -2,6 +2,7 @@ package com.school.project.wahr_oder_watt.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -62,7 +63,8 @@ public class SecurityConfig {
         .authenticationProvider(authenticationProvider)
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/auth/**", "/api/auth/**", "/favicon.ico").permitAll()
+            .requestMatchers("/", "/favicon.ico", "/auth/**", "/api/auth/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
             .anyRequest().authenticated()
         )
         .httpBasic(AbstractHttpConfigurer::disable)
