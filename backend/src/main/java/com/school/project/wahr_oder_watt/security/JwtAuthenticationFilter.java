@@ -33,14 +33,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       @NonNull FilterChain filterChain)
       throws ServletException, IOException {
 
-    final String requestURI = request.getRequestURI();
-
-    // Corrected check for public paths
-    if (isPublicPath(requestURI)) {
-      filterChain.doFilter(request, response);
-      return;
-    }
-
     final String authHeader = request.getHeader("Authorization");
     if (authHeader == null || !authHeader.startsWith("Bearer ")) {
       filterChain.doFilter(request, response);
@@ -63,14 +55,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     filterChain.doFilter(request, response);
   }
 
-  // Helper method to correctly identify public paths
-  private boolean isPublicPath(String requestURI) {
-    // Exact matches for specific files/routes
-    if (requestURI.equals("/") || requestURI.equals("/favicon.ico")) {
-        return true;
-    }
-    // Prefix matches for directories/path segments
-    return requestURI.startsWith("/api/auth/") || 
-           requestURI.startsWith("/static/");
-  }
+  
 }
