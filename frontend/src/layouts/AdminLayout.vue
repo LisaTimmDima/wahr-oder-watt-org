@@ -10,11 +10,23 @@
 // Importe
 // Vue-Funktionen und Komponenten, die in diesem Layout verwendet werden.
 // ==================================================================================
-import { ref } from 'vue';
+import {computed, onMounted, ref} from 'vue';
 import { HomeIcon, UsersIcon, CubeIcon, BellIcon, UserCircleIcon, PlayIcon, XMarkIcon, ArrowLeftOnRectangleIcon } from '@heroicons/vue/24/outline';
 import AdminDashboardView from '../views/AdminDashboardView.vue';
 import AdminUserManagement from '../views/AdminUserManagement.vue';
 import AdminItemsView from '../views/AdminItemsView.vue';
+
+
+
+// ==================================================================================
+// Reactive State für API-Aufrufe
+// Diese Variablen werden verwendet, um den Ladezustand und Fehler bei API-Aufrufen
+// zu verwalten. Aktuell nicht in Gebrauch, aber vorbereitet für zukünftige Erweiterungen.
+// ==================================================================================
+const loading = ref(false);
+const token = computed(() => localStorage.getItem('jwt'));
+const loggedInUser = ref({ id: 0, name: 'Lädt...' });
+
 
 // ==================================================================================
 // Emits
@@ -82,6 +94,18 @@ function handleAdminPlay() {
 }
 
 /**
+ * @function fetchCurrentUser
+ * @author Dima
+ * @description Lädt die Daten des aktuell angemeldeten Benutzers vom Server.
+ */
+async function fetchCurrentUser() {
+  const resp = await fetch('/api/users/me', { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token.value}` } });
+  if (!resp.ok) throw new Error('Fehler beim Laden der Benutzer');
+  return await resp.json();
+}
+
+
+/**
  * @function navigate
  * @author Lisa
  * @description Ändert die aktive Ansicht im Admin-Bereich.
@@ -102,6 +126,22 @@ function logout() {
   window.location.href = '/login';
 }
 
+onMounted(async () => {
+  loading.value = true;
+    // Aktuellen User laden (Backend) mit Fallback auf localStorage
+    try {
+      const me = await fetchCurrentUser();
+      loggedInUser.value = {
+        id: me.id,
+        name: me.username,
+      };
+    } catch {
+      loggedInUser.value = {
+        id: Number(localStorage.getItem('currentUserId')),
+        name: localStorage.getItem('currentUsername')
+      };
+    }
+});
 </script>
 
 <template>
@@ -173,7 +213,7 @@ function logout() {
           <div class="flex items-center gap-3">
             <UserCircleIcon class="h-10 w-10 text-gray-500" />
             <div>
-              <div class="font-semibold">Peter Grünning</div>
+              <div class="font-semibold">{{ loggedInUser.name }}</div>
               <div class="text-xs text-gray-500">Administrator</div>
             </div>
           </div>

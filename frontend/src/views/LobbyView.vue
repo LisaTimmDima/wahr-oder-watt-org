@@ -145,7 +145,7 @@ onMounted(async () => {
         id: me.id,
         name: me.username,
       };
-    } catch (e) {
+    } catch {
       loggedInUser.value = {
         id: Number(localStorage.getItem('currentUserId')),
         name: localStorage.getItem('currentUsername')

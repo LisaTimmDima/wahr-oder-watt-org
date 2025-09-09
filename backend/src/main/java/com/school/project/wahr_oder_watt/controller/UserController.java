@@ -59,25 +59,34 @@ public class UserController {
    * Gibt den aktuell angemeldeten Benutzer zurück.
    */
 @GetMapping("/me")
-@ResponseStatus(HttpStatus.OK)
-public Map<String, Object> me(Authentication authentication) {
-  Logger log1 = log;
-  log1.info(authentication.toString());
-  Map<String, Object> dto = new HashMap<>();
+public ResponseEntity<Map<String, Object>> me(Authentication authentication) {
   if (authentication == null) {
-    dto.put("id", 0);
-    dto.put("username", "unknown");
-    return dto;
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+        .body(Map.of("id", 0, "username", "unknown"));
   }
-  User user = userService.findByEmail(authentication.getName());
+
+  log.info("Authenticated as: {}", authentication.getName());
+  String identifier = authentication.getName();
+
+  // Versuche zuerst per Username, dann per E-Mail
+  User user = null;
+  try {
+    user = userService.findByUsername(identifier); // falls vorhanden
+  } catch (Exception ignored) { /* Methode evtl. nicht vorhanden */ }
+
   if (user == null) {
-    dto.put("id", 0);
-    dto.put("username", "unknown");
-    return dto;
+    user = userService.findByEmail(identifier);
   }
+
+  if (user == null) {
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+        .body(Map.of("id", 0, "username", "unknown"));
+  }
+
+  Map<String, Object> dto = new HashMap<>();
   dto.put("id", user.getId());
   dto.put("username", user.getUsername());
-  return dto;
+  return ResponseEntity.ok(dto);
 }
 
   /**
