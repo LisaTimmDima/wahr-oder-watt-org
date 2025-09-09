@@ -13,98 +13,176 @@ import { XMarkIcon, UserPlusIcon } from '@heroicons/vue/24/solid';
 // Reactive State: ref() erstellt reaktive Variablen zur Steuerung der UI und zur Speicherung der Daten.
 // ==================================================================================
 
+
+// UI-State
 const isEditModalOpen = ref(false);
 const isAddModalOpen = ref(false);
 const selectedUser = ref(null);
 const newUser = ref({ name: '', email: '', password: '' });
-const token = computed(() => localStorage.getItem('jwt'));
+const users = ref([]);
 const availablePlayers = ref([]);
 const loading = ref(false);
 const error = ref(null);
 
+// Auth
+const token = computed(() => localStorage.getItem('jwt'));
 
-const users = ref([]);
-users.value = [
-  { id: 1, name: 'Peter Grünning', email: 'peter@example.com', status: 'active' },
-  { id: 2, name: 'Max Mustermann', email: 'max@example.com', status: 'blocked' },
-  { id: 3, name: 'Erika Mustermann', email: 'erika@example.com', status: 'blocked' },
-];
-
-// BARRIEREFREIHEIT: Reaktive Variablen für Zoom und Kontrast.
+// A11y: Zoom/Kontrast
 const zoomLevel = ref(1);
 const isHighContrast = ref(false);
-
-// ==================================================================================
-// Computed Properties
-// ==================================================================================
-
 const containerStyle = computed(() => ({ zoom: zoomLevel.value }));
 
-// ==================================================================================
-// UI-Methoden (Verantwortlich: Lisa)
-// ==================================================================================
+// Validation
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const isEmailValid = computed(() => emailRegex.test((newUser.value.email || '').trim()));
+function setErrorMessage(message) { error.value = message; }
 
+// Modal-Steuerung
 function openEditModal(user) {
-  selectedUser.value = { ...user }; 
+  selectedUser.value = { ...user };
   isEditModalOpen.value = true;
 }
-
 function openAddModal() {
   newUser.value = { name: '', email: '', password: '' };
   isAddModalOpen.value = true;
 }
-
 function closeModal() {
   isEditModalOpen.value = false;
   isAddModalOpen.value = false;
   selectedUser.value = null;
 }
 
-// ==================================================================================
-// API-Methoden (Verantwortlich: Dima)
-// ==================================================================================
-
+// API
 async function fetchUsers() {
-  const resp = await fetch('/api/users', { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token.value}` } });
+  const resp = await fetch('/api/users', {
+    headers: { Accept: 'application/json', Authorization: `Bearer ${token.value}` }
+  });
   if (!resp.ok) throw new Error('Fehler beim Laden der Benutzer');
   return await resp.json();
 }
 
+// Normalisiert die Backend-Antwort in UI-Modelle
+function mapUsers(all) {
+  return (Array.isArray(all) ? all : []).map(u => ({
+    id: u.id,
+    name: u.username ?? u.name ?? 'Unbekannt',
+    email: u.email ?? '',
+    status: u.enabled ? 'active' : 'blocked'
+  }));
+}
+
+async function reloadUsers() {
+  const all = await fetchUsers();
+  const mapped = mapUsers(all);
+  availablePlayers.value = mapped;
+  users.value = mapped;
+}
+
+// Create (wie handleRegister)
 async function handleAddNewUser() {
-  if (!newUser.value.name || !newUser.value.email || !newUser.value.password) {
-    alert('Bitte alle Felder ausfüllen.');
+  error.value = null;
+
+  if (!isEmailValid.value) {
+    setErrorMessage('Bitte geben Sie eine gültige E‑Mail‑Adresse ein.');
     return;
   }
-  console.log("Sende neuen Benutzer zum Server:", newUser.value);
-  await fetchUsers();
-  closeModal();
+  if ((newUser.value.password || '').length < 8) {
+    setErrorMessage('Das Passwort muss mindestens 8 Zeichen lang sein.');
+    return;
+  }
+  if (!(newUser.value.name || '').trim()) {
+    setErrorMessage('Bitte den Benutzernamen ausfüllen.');
+    return;
+  }
+
+  loading.value = true;
+  try {
+    const payload = {
+      username: (newUser.value.name || '').trim(),
+      email: (newUser.value.email || '').trim(),
+      password: newUser.value.password || ''
+    };
+
+    const resp = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!resp.ok) {
+      let msg = 'Registrierung fehlgeschlagen.';
+      try {
+        const data = await resp.json();
+        if (data?.message) msg = data.message;
+      } catch {}
+      throw new Error(msg);
+    }
+
+    await reloadUsers();
+    newUser.value = { name: '', email: '', password: '' };
+    isAddModalOpen.value = false;
+  } catch (e) {
+    setErrorMessage(e?.message ?? 'Unbekannter Fehler');
+    alert(error.value);
+  } finally {
+    loading.value = false;
+  }
 }
 
+// Update/Status
 async function saveChanges() {
   if (!selectedUser.value) return;
-  console.log("Sende Änderungen für Benutzer", selectedUser.value.id, ":", selectedUser.value);
-  await fetchUsers();
+  // TODO: PUT/PATCH an Backend, z.B. /api/users/{id}
+  console.log('Sende Änderungen für Benutzer', selectedUser.value.id, selectedUser.value);
+  await reloadUsers();
   closeModal();
 }
-
 function activateUser() {
   if (!selectedUser.value) return;
   selectedUser.value.status = 'active';
   saveChanges();
 }
-
 function blockUser() {
   if (!selectedUser.value) return;
   selectedUser.value.status = 'blocked';
   saveChanges();
 }
 
+async function deleteUserById(id) {
+  const resp = await fetch(`/api/users/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token.value}`,
+    },
+  });
+  // Spring gibt 204 No Content zurück -> als Erfolg werten
+  if (!(resp.ok || resp.status === 204)) {
+    throw new Error('Fehler beim Löschen des Benutzers');
+  }
+}
+
 async function deleteUser() {
   if (!selectedUser.value) return;
-  if (confirm(`Sind Sie sicher, dass Sie den Benutzer "${selectedUser.value.name}" löschen möchten?`)) {
-    console.log("Lösche Benutzer mit ID:", selectedUser.value.id);
-    await fetchUsers();
+  const { id, name } = selectedUser.value;
+
+  if (!confirm(`Sind Sie sicher, dass Sie den Benutzer "${name}" löschen möchten?`)) {
+    return;
+  }
+
+  loading.value = true;
+  try {
+    await deleteUserById(id);
+
+    // Lokalen Zustand aktualisieren (ohne kompletten Reload)
+    users.value = users.value.filter(u => u.id !== id);
+    availablePlayers.value = availablePlayers.value.filter(u => u.id !== id);
+
     closeModal();
+  } catch (e) {
+    alert(e?.message ?? 'Löschen fehlgeschlagen');
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -126,20 +204,11 @@ function toggleHighContrast() {
 // Lifecycle Hooks
 // ==================================================================================
 
+// Load
 onMounted(async () => {
   loading.value = true;
   try {
-    const all = await fetchUsers();
-
-    const mapped = (Array.isArray(all) ? all : []).map(u => ({
-      id: u.id,
-      name: u.username,
-      email: u.email,
-      status: u.enabled ? 'active' : 'blocked'
-    }));
-
-    availablePlayers.value = mapped;
-    users.value = mapped;
+    await reloadUsers();
   } catch (e) {
     error.value = e?.message ?? 'Fehler beim Laden der Benutzer';
     availablePlayers.value = [];
