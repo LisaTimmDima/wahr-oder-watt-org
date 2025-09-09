@@ -20,8 +20,7 @@ const VIEW_MODES = {
   FORGOT_PASSWORD_EMAIL_SENT: 'forgot-password-email-sent',
   RESET_PASSWORD: 'reset-password',
 };
-const API_URL_LOGIN = '/api/auth/login';
-const API_URL_ADMIN_LOGIN = '/api/auth/login_admin';
+
 const API_URL_REGISTER = '/api/auth/register';
 
 // ==================================================================================

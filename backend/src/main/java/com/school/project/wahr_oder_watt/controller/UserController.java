@@ -45,6 +45,16 @@ public class UserController {
             .toList()
     );
   }
+
+  @GetMapping("/not_available")
+  public ResponseEntity<List<User>> getNotAvailableUsers() {
+    return ResponseEntity.ok(
+        userService.findAll().stream()
+            .filter(u -> !u.isEnabled()) // Voraussetzung: Methode/Flag existiert
+            .toList()
+    );
+  }
+
 /**
    * Gibt den aktuell angemeldeten Benutzer zurück.
    */
@@ -73,7 +83,7 @@ public Map<String, Object> me(Authentication authentication) {
   /**
    * Gibt einen Benutzer anhand der ID zurück.
    */
-  @GetMapping("/{id}")
+  @GetMapping("/{id:\\d+}")
   public ResponseEntity<User> getUser(@PathVariable Long id) {
     User user = userService.findById(id);
     return ResponseEntity.ok(user);
@@ -91,7 +101,7 @@ public Map<String, Object> me(Authentication authentication) {
   /**
    * Aktualisiert einen bestehenden Benutzer.
    */
-  @PutMapping("/{id}")
+  @PutMapping("/{id:\\d+}")
   public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
     User updated = userService.update(id, user);
     return ResponseEntity.ok(updated);
@@ -100,7 +110,7 @@ public Map<String, Object> me(Authentication authentication) {
   /**
    * Löscht einen Benutzer anhand der ID.
    */
-  @DeleteMapping("/{id}")
+  @DeleteMapping("/{id:\\d+}")
   public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
     userService.delete(id);
     return ResponseEntity.noContent().build();

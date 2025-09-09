@@ -17,7 +17,18 @@ const isEditModalOpen = ref(false);
 const isAddModalOpen = ref(false);
 const selectedUser = ref(null);
 const newUser = ref({ name: '', email: '', password: '' });
+const token = computed(() => localStorage.getItem('jwt'));
+const availablePlayers = ref([]);
+const loading = ref(false);
+const error = ref(null);
+
+
 const users = ref([]);
+users.value = [
+  { id: 1, name: 'Peter Grünning', email: 'peter@example.com', status: 'active' },
+  { id: 2, name: 'Max Mustermann', email: 'max@example.com', status: 'blocked' },
+  { id: 3, name: 'Erika Mustermann', email: 'erika@example.com', status: 'blocked' },
+];
 
 // BARRIEREFREIHEIT: Reaktive Variablen für Zoom und Kontrast.
 const zoomLevel = ref(1);
@@ -54,12 +65,9 @@ function closeModal() {
 // ==================================================================================
 
 async function fetchUsers() {
-  console.log("Lade Benutzer vom Server...");
-  users.value = [
-    { id: 1, name: 'Peter Grünning', email: 'peter@example.com', status: 'active' },
-    { id: 2, name: 'Max Mustermann', email: 'max@example.com', status: 'blocked' },
-    { id: 3, name: 'Erika Mustermann', email: 'erika@example.com', status: 'blocked' },
-  ];
+  const resp = await fetch('/api/users', { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token.value}` } });
+  if (!resp.ok) throw new Error('Fehler beim Laden der Benutzer');
+  return await resp.json();
 }
 
 async function handleAddNewUser() {
@@ -118,8 +126,27 @@ function toggleHighContrast() {
 // Lifecycle Hooks
 // ==================================================================================
 
-onMounted(() => {
-  fetchUsers();
+onMounted(async () => {
+  loading.value = true;
+  try {
+    const all = await fetchUsers();
+
+    const mapped = (Array.isArray(all) ? all : []).map(u => ({
+      id: u.id,
+      name: u.username,
+      email: u.email,
+      status: u.enabled ? 'active' : 'blocked'
+    }));
+
+    availablePlayers.value = mapped;
+    users.value = mapped;
+  } catch (e) {
+    error.value = e?.message ?? 'Fehler beim Laden der Benutzer';
+    availablePlayers.value = [];
+    users.value = [];
+  } finally {
+    loading.value = false;
+  }
 });
 
 </script>
