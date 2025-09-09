@@ -78,7 +78,6 @@ public class UserService {
   public User update(Long id, User user) {
     User existingUser = findById(id);
     existingUser.setUsername(user.getUsername());
-    existingUser.setPassword(user.getPassword());
     existingUser.setAdmin(user.isAdmin());
     existingUser.setEnabled(user.isEnabled());
     existingUser.setScore(user.getScore());
@@ -105,8 +104,8 @@ public class UserService {
     user.setUsername(request.getUsername());
     user.setPassword(passwordEncoder.encode(request.getPassword()));
     user.setEmail(request.getEmail());
-    user.setAdmin(true); // Standardmäßig kein Admin
-    user.setEnabled(true); // Standardmäßig aktiviert
+    user.setAdmin(false); // Standardmäßig kein Admin
+    user.setEnabled(false); // Standardmäßig deakteviert
     user.setScore(0); // Anfangspunktzahl
     userRepository.save(user);
   }
