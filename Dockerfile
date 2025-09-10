@@ -9,16 +9,6 @@ COPY frontend/ .
 RUN npm run build   
 
 # -------------------------
-# Stage 1: Build Frontend
-# -------------------------
-FROM node:20-alpine AS frontend-build
-WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm install
-COPY frontend/ .
-RUN npm run build   
-
-# -------------------------
 # Stage 2: Build Backend
 # -------------------------
 FROM maven:3.9.11-eclipse-temurin-21-alpine AS backend-build
