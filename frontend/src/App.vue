@@ -83,7 +83,7 @@ function showLobby() {
 
 /**
  * @function
- * @author Dima
+ * @author Lisa und Dima
  * @description Zeigt die Admin-Ansicht an. Dient als allgemeine "Zurück zur Admin"-Funktion.
  */
 async function showAdmin() {
