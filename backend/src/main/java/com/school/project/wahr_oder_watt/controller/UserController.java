@@ -86,6 +86,7 @@ public ResponseEntity<Map<String, Object>> me(Authentication authentication) {
   Map<String, Object> dto = new HashMap<>();
   dto.put("id", user.getId());
   dto.put("username", user.getUsername());
+  dto.put("admin", user.isAdmin());
   return ResponseEntity.ok(dto);
 }
 

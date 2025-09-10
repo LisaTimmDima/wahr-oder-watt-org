@@ -13,7 +13,7 @@ import { UserCircleIcon, TrophyIcon, QuestionMarkCircleIcon, ArrowRightOnRectang
 // ==================================================================================
 // Emits: Deklariert Events, die diese Komponente aussenden kann, um mit der Eltern-Komponente (App.vue) zu kommunizieren.
 // ==================================================================================
-const emit = defineEmits(['start-game', 'show-help', 'show-highscores']);
+const emit = defineEmits(['start-game', 'show-help', 'show-highscores', 'show-admin']);
 
 // ==================================================================================
 // Reactive State: ref() erstellt reaktive Variablen, deren Änderungen die UI automatisch aktualisieren.
@@ -87,6 +87,15 @@ function onHelpClick() {
 }
 
 /**
+ * @function onAdminClick
+ * @author Lisa
+ * @description Löst das 'show-admin'-Event aus, um die Admin-Ansicht anzuzeigen.
+ */
+function onAdminClick() {
+  emit('show-admin');
+}
+
+/**
  * @function onHighscoresClick
  * @author Lisa
  * @description Löst das 'show-highscores'-Event aus, um die Highscore-Ansicht anzuzeigen.
@@ -144,11 +153,13 @@ onMounted(async () => {
       loggedInUser.value = {
         id: me.id,
         name: me.username,
+        admin: me.admin,
       };
     } catch {
       loggedInUser.value = {
         id: Number(localStorage.getItem('currentUserId')),
-        name: localStorage.getItem('currentUsername')
+        name: localStorage.getItem('currentUsername'),
+        admin: localStorage.getItem('isAdmin') === 'true'
       };
     }
     const all = await fetchUsers();
@@ -192,6 +203,11 @@ onMounted(async () => {
             <button @click="increaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">+</button>
           </div>
           <button @click="toggleHighContrast" class="px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">Kontrast</button>
+          <button
+              @click="onAdminClick" class="flex items-center gap-2 px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300 font-semibold transition-colors" aria-label="Admin Bereich öffnen" title="Admin">
+            <UsersIcon class="h-5 w-5 text-gray-600" />
+            <span>Admin</span>
+          </button>
           <button @click="onHighscoresClick" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors">
             <TrophyIcon class="h-6 w-6" />
             <span>Highscores</span>

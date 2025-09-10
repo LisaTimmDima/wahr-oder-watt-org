@@ -80,6 +80,40 @@ function showHighscores() {
 function showLobby() {
   currentView.value = 'lobby';
 }
+
+/**
+ * @function
+ * @author Dima
+ * @description Zeigt die Admin-Ansicht an. Dient als allgemeine "Zurück zur Admin"-Funktion.
+ */
+async function showAdmin() {
+  const token = localStorage.getItem('jwt');
+  if (!token) {
+    currentView.value = 'login';
+    return;
+  }
+
+  try {
+    const resp = await fetch('/api/users/me', {
+      headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` }
+    });
+    if (!resp.ok) {
+      throw new Error('auth check failed');
+    }
+    const me = await resp.json();
+    const isAdmin = me.admin === true;
+
+    if (isAdmin) {
+      currentView.value = 'admin';
+    } else {
+      // einfache UX-Feedback; serverseitige Absicherung trotzdem erforderlich
+      alert('Zugriff verweigert: Adminrechte erforderlich.');
+    }
+  } catch (e) {
+    console.error('Admin-Prüfung fehlgeschlagen', e);
+    alert('Fehler bei der Rechteprüfung.');
+  }
+}
 </script>
 
 <template>
@@ -102,6 +136,7 @@ function showLobby() {
     @start-game="onGameStart"
     @show-help="showHelp"
     @show-highscores="showHighscores"
+    @show-admin="showAdmin"
   />
 
   <AdminLayout 
