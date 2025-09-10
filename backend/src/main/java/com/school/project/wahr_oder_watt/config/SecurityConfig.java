@@ -63,8 +63,9 @@ public class SecurityConfig {
         .authenticationProvider(authenticationProvider)
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/auth/**", "/api/auth/**").permitAll()
-            .anyRequest().permitAll() // WARNING: Temporarily allowing all requests for testing. Revert this for production.
+            .requestMatchers("/api/auth/**").permitAll() // Endpoints for login/registration
+            .requestMatchers("/api/**").authenticated() // Secure all other API endpoints
+            .anyRequest().permitAll() // Allow all other requests for the frontend SPA
         )
         .httpBasic(AbstractHttpConfigurer::disable)
         .formLogin(AbstractHttpConfigurer::disable)
