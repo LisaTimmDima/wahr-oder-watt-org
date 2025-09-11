@@ -124,7 +124,6 @@ async function handleAddNewUser() {
     isAddModalOpen.value = false;
   } catch (e) {
     setErrorMessage(e?.message ?? 'Unbekannter Fehler');
-    alert(error.value);
   } finally {
     loading.value = false;
   }
@@ -270,7 +269,7 @@ onMounted(async () => {
                 <button @click="toggleHighContrast" class="px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">Kontrast</button>
                 <button @click="openAddModal" class="inline-flex items-center gap-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200">
                     <UserPlusIcon class="h-5 w-5"/>
-                    <span>Benutzer Eintragen</span>
+                    <span>Benutzer erstellen</span>
                 </button>
             </div>
         </div>
@@ -296,7 +295,7 @@ onMounted(async () => {
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <span :class="['px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
-                                  user.admin === 'true' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800']">
+                                  user.admin === 'true' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800']">
                       {{ user.admin === 'true' ? 'Admin' : 'User' }}
                     </span>
                 </td>
@@ -314,7 +313,7 @@ onMounted(async () => {
             <div class="flex justify-between items-start">
                 <div>
                 <p class="font-bold text-gray-800">{{ user.name }}
-                  <span :class="['ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full', user.admin === 'true' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800']">{{ user.admin === 'true' ? 'Admin' : 'User' }}</span>
+                  <span :class="['ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full', user.admin === 'true' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800']">{{ user.admin === 'true' ? 'Admin' : 'User' }}</span>
                 </p>
                 <p class="text-sm text-gray-600">{{ user.email }}</p>
                 </div>
@@ -352,15 +351,16 @@ onMounted(async () => {
             <button @click="saveChanges" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Speichern</button>
             <button v-if="selectedUser.status === 'active'" @click="setUserStatus('blocked')" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">Sperren</button>
             <button v-if="selectedUser.status === 'blocked'" @click="setUserStatus('active')" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">Freischalten</button>
-          <button v-if="selectedUser.admin === 'true'" @click="setAdmin('false')" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-500 hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">Admin entziehen</button>
-          <button v-else @click="setAdmin('true')" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-600">Zum Admin machen</button>
           <button @click="deleteUser" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-base font-medium rounded-md shadow-sm text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mr-auto">Löschen</button>
         </div>
       </div>
        <div v-if="isAddModalOpen" class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 sm:p-8">
         <div class="flex justify-between items-center pb-4 border-b border-gray-200">
-          <h3 class="text-2xl font-bold text-gray-800">Neuen Benutzer Eintragen</h3>
+          <h3 class="text-2xl font-bold text-gray-800">Neuen Benutzer erstellen</h3>
           <button @click="closeModal" class="p-1 rounded-full text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition-colors"><XMarkIcon class="h-6 w-6" /></button>
+        </div>
+        <div v-if="error" class="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <span class="block sm:inline">{{ error }}</span>
         </div>
         <form @submit.prevent="handleAddNewUser" class="mt-6">
           <div class="space-y-4">
