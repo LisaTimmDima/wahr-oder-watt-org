@@ -292,11 +292,11 @@ onMounted(async () => {
         </div>
 
       </main>
-      <div class="fixed bottom-4 left-4">
+      <div v-if="loggedInUser.admin" class="fixed bottom-4 left-4">
         <button
             @click="onAdminClick" class="flex items-center gap-2 px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-semibold transition-colors shadow-md" aria-label="Zurück zum Admin-Dashboard" title="Zurück zum Admin-Dashboard">
           <ArrowUturnLeftIcon class="h-5 w-5" />
-          <span>Zurück zum Admin-Dashboard</span>
+          <span>Zum Admin-Dashboard</span>
         </button>
       </div>
 
