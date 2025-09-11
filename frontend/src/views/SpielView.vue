@@ -122,7 +122,9 @@ function startTimer() {
 }
 
 function goBackToLobby() {
-  emit('show-lobby');
+  if (confirm("Möchtest du das Spiel wirklich verlassen? Dein aktueller Punktestand geht verloren.")) {
+    emit('show-lobby');
+  }
 }
 
 // BARRIEREFREIHEIT: Methoden
@@ -168,8 +170,19 @@ onUnmounted( () => {
 <template>
   <div class="bg-gray-100 min-h-screen flex flex-col p-2 sm:p-4" :style="containerStyle" :class="{ 'high-contrast': isHighContrast }">
     
-    <header class="w-full max-w-4xl mx-auto">
-        <div class="flex justify-end items-center gap-4 mb-2">
+        <header class="w-full max-w-4xl mx-auto">
+      <div class="flex justify-between items-center mb-4">
+        <button @click="goBackToLobby" data-test="back-to-lobby-button" class="flex items-center gap-2 text-red-600 hover:text-blue-600 font-semibold transition-colors">
+          <ArrowUturnLeftIcon class="h-6 w-6" />
+          <span class="hidden sm:inline">Zurück zur Lobby</span>
+        </button>
+        
+        <div class="flex items-center gap-2">
+          <img src="../assets/gluehbirne.svg" alt="Wahr oder Watt Logo" class="h-12 w-auto" style="transform: scale(0.8);">
+          <h1 class="text-2xl font-bold text-gray-800">Wahr oder Watt?</h1>
+        </div>
+
+        <div class="flex items-center gap-4">
             <!-- BARRIEREFREIHEIT: Steuerelemente für Zoom und Kontrast. -->
             <div class="flex items-center gap-2">
                 <span class="text-sm text-gray-600">Zoom:</span>
@@ -178,12 +191,6 @@ onUnmounted( () => {
             </div>
             <button @click="toggleHighContrast" class="px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">Kontrast</button>
         </div>
-      <div class="flex justify-center items-center mb-2 relative">
-        <button @click="goBackToLobby" data-test="back-to-lobby-button" class="absolute left-0 flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors">
-          <ArrowUturnLeftIcon class="h-6 w-6" />
-          <span class="hidden sm:inline">Zurück zur Lobby</span>
-        </button>
-        <img src="../assets/gluehbirne.svg" alt="Wahr oder Watt Logo" class="h-20 sm:h-24 w-auto" style="transform: scale(0.8);">
       </div>
       <div class="bg-white rounded-xl shadow-md p-2 sm:p-4 grid grid-cols-3 items-center gap-2 sm:gap-4">
         
@@ -253,7 +260,15 @@ onUnmounted( () => {
       </div>
 
       <!-- Antwort abschicken Button -->
-      <button @click="submitAnswers(false)" data-test="submit-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold text-xl sm:text-2xl py-3 px-12 sm:py-4 sm:px-16 rounded-full shadow-md transition-transform transform hover:scale-105">
+      <button @click="submitAnswers(false)"
+              data-test="submit-button"
+              :disabled="selectedAnswers.length === 0"
+              :class="[
+                'font-bold text-xl sm:text-2xl py-3 px-12 sm:py-4 sm:px-16 rounded-full shadow-md transition-transform transform',
+                selectedAnswers.length === 0
+                  ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                  : 'bg-blue-500 text-white hover:bg-blue-600 hover:scale-105'
+              ]">
         OK
       </button>
 
