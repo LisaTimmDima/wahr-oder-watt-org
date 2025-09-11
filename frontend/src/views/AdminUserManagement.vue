@@ -13,90 +13,216 @@ import { XMarkIcon, UserPlusIcon } from '@heroicons/vue/24/solid';
 // Reactive State: ref() erstellt reaktive Variablen zur Steuerung der UI und zur Speicherung der Daten.
 // ==================================================================================
 
+
+// UI-State
 const isEditModalOpen = ref(false);
 const isAddModalOpen = ref(false);
 const selectedUser = ref(null);
 const newUser = ref({ name: '', email: '', password: '' });
 const users = ref([]);
+const availablePlayers = ref([]);
+const loading = ref(false);
+const error = ref(null);
 
-// BARRIEREFREIHEIT: Reaktive Variablen für Zoom und Kontrast.
+// Auth
+const token = computed(() => localStorage.getItem('jwt'));
+
+// A11y: Zoom/Kontrast
 const zoomLevel = ref(1);
 const isHighContrast = ref(false);
-
-// ==================================================================================
-// Computed Properties
-// ==================================================================================
-
 const containerStyle = computed(() => ({ zoom: zoomLevel.value }));
 
-// ==================================================================================
-// UI-Methoden (Verantwortlich: Lisa)
-// ==================================================================================
+// Validation
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const isEmailValid = computed(() => emailRegex.test((newUser.value.email || '').trim()));
+function setErrorMessage(message) { error.value = message; }
 
+// Modal-Steuerung
 function openEditModal(user) {
-  selectedUser.value = { ...user }; 
+  selectedUser.value = { ...user };
   isEditModalOpen.value = true;
 }
-
 function openAddModal() {
   newUser.value = { name: '', email: '', password: '' };
   isAddModalOpen.value = true;
 }
-
 function closeModal() {
   isEditModalOpen.value = false;
   isAddModalOpen.value = false;
   selectedUser.value = null;
 }
 
-// ==================================================================================
-// API-Methoden (Verantwortlich: Dima)
-// ==================================================================================
-
+// API
 async function fetchUsers() {
-  console.log("Lade Benutzer vom Server...");
-  users.value = [
-    { id: 1, name: 'Peter Grünning', email: 'peter@example.com', status: 'active' },
-    { id: 2, name: 'Max Mustermann', email: 'max@example.com', status: 'blocked' },
-    { id: 3, name: 'Erika Mustermann', email: 'erika@example.com', status: 'blocked' },
-  ];
+  const resp = await fetch('/api/users', {
+    headers: { Accept: 'application/json', Authorization: `Bearer ${token.value}` }
+  });
+  if (!resp.ok) throw new Error('Fehler beim Laden der Benutzer');
+  return await resp.json();
 }
 
+// Normalisiert die Backend-Antwort in UI-Modelle
+function mapUsers(all) {
+  return (Array.isArray(all) ? all : []).map(u => ({
+    id: u.id,
+    name: u.username ?? u.name ?? 'Unbekannt',
+    email: u.email ?? '',
+    status: u.enabled ? 'active' : 'blocked',
+    admin: u.admin ? 'true' : 'false'
+  }));
+}
+
+async function reloadUsers() {
+  const all = await fetchUsers();
+  const mapped = mapUsers(all);
+  availablePlayers.value = mapped;
+  users.value = mapped;
+}
+
+// Create (wie handleRegister)
 async function handleAddNewUser() {
-  if (!newUser.value.name || !newUser.value.email || !newUser.value.password) {
-    alert('Bitte alle Felder ausfüllen.');
+  error.value = null;
+
+  if (!isEmailValid.value) {
+    setErrorMessage('Bitte geben Sie eine gültige E‑Mail‑Adresse ein.');
     return;
   }
-  console.log("Sende neuen Benutzer zum Server:", newUser.value);
-  await fetchUsers();
-  closeModal();
+  if ((newUser.value.password || '').length < 8) {
+    setErrorMessage('Das Passwort muss mindestens 8 Zeichen lang sein.');
+    return;
+  }
+  if (!(newUser.value.name || '').trim()) {
+    setErrorMessage('Bitte den Benutzernamen ausfüllen.');
+    return;
+  }
+
+  loading.value = true;
+  try {
+    const payload = {
+      username: (newUser.value.name || '').trim(),
+      email: (newUser.value.email || '').trim(),
+      password: newUser.value.password || ''
+    };
+
+    const resp = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!resp.ok) {
+      let msg = 'Registrierung fehlgeschlagen.';
+      try {
+        const data = await resp.json();
+        if (data?.message) msg = data.message;
+      } catch { /* ignore */ }
+      throw new Error(msg);
+    }
+
+    await reloadUsers();
+    newUser.value = { name: '', email: '', password: '' };
+    isAddModalOpen.value = false;
+  } catch (e) {
+    setErrorMessage(e?.message ?? 'Unbekannter Fehler');
+    alert(error.value);
+  } finally {
+    loading.value = false;
+  }
+}
+
+// Update/Status
+function setUserStatus(status) {
+  if (!selectedUser.value) return;
+  selectedUser.value.status = status; // 'active' | 'blocked'
+  saveChanges();
+}
+function setAdmin(isAdmin) {
+  if (!selectedUser.value) return;
+  selectedUser.value.admin = isAdmin;
+  saveChanges();
 }
 
 async function saveChanges() {
   if (!selectedUser.value) return;
-  console.log("Sende Änderungen für Benutzer", selectedUser.value.id, ":", selectedUser.value);
-  await fetchUsers();
-  closeModal();
+
+  loading.value = true;
+  error.value = null;
+
+  try {
+    const resp = await fetch(`/api/users/${selectedUser.value.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${token.value}`,
+      },
+      body: JSON.stringify({
+        username: selectedUser.value.name,
+        email: selectedUser.value.email,
+        enabled: selectedUser.value.status === 'active',
+        admin: selectedUser.value.admin === 'true',
+      }),
+    });
+
+    if (!resp.ok) {
+      let msg = 'Fehler beim Speichern der Änderungen';
+      const ct = resp.headers.get('content-type') || '';
+
+      if (ct.includes('application/json')) {
+        const data = await resp.json().catch(() => null);
+        if (data?.message) msg = data.message;
+      } else {
+        const text = await resp.text().catch(() => '');
+        if (text) msg = text;
+      }
+
+      throw new Error(msg);
+    }
+
+    await reloadUsers();
+    closeModal();
+  } catch (e) {
+    alert(e?.message ?? 'Fehler beim Speichern der Änderungen');
+  } finally {
+    loading.value = false;
+  }
 }
 
-function activateUser() {
-  if (!selectedUser.value) return;
-  selectedUser.value.status = 'active';
-  saveChanges();
-}
-
-function blockUser() {
-  if (!selectedUser.value) return;
-  selectedUser.value.status = 'blocked';
-  saveChanges();
+async function deleteUserById(id) {
+  const resp = await fetch(`/api/users/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token.value}`,
+    },
+  });
+  // Spring gibt 204 No Content zurück -> als Erfolg werten
+  if (!(resp.ok || resp.status === 204)) {
+    throw new Error('Fehler beim Löschen des Benutzers');
+  }
 }
 
 async function deleteUser() {
   if (!selectedUser.value) return;
-  if (confirm(`Sind Sie sicher, dass Sie den Benutzer "${selectedUser.value.name}" löschen möchten?`)) {
-    console.log("Lösche Benutzer mit ID:", selectedUser.value.id);
-    await fetchUsers();
+  const { id, name } = selectedUser.value;
+
+  if (!confirm(`Sind Sie sicher, dass Sie den Benutzer "${name}" löschen möchten?`)) {
+    return;
+  }
+
+  loading.value = true;
+  try {
+    await deleteUserById(id);
+
+    // Lokalen Zustand aktualisieren (ohne kompletten Reload)
+    users.value = users.value.filter(u => u.id !== id);
+    availablePlayers.value = availablePlayers.value.filter(u => u.id !== id);
+
     closeModal();
+  } catch (e) {
+    alert(e?.message ?? 'Löschen fehlgeschlagen');
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -118,8 +244,12 @@ function toggleHighContrast() {
 // Lifecycle Hooks
 // ==================================================================================
 
-onMounted(() => {
-  fetchUsers();
+// Load
+onMounted(async () => {
+  loading.value = true;
+  try { await reloadUsers(); }
+  catch (e) { error.value = e?.message ?? 'Fehler beim Laden der Benutzer'; users.value = []; availablePlayers.value = []; }
+  finally { loading.value = false; }
 });
 
 </script>
@@ -153,6 +283,7 @@ onMounted(() => {
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rolle</th>
                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aktion</th>
                 </tr>
             </thead>
@@ -162,6 +293,12 @@ onMounted(() => {
                 <td class="px-6 py-4 whitespace-nowrap">{{ user.email }}</td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <span :class="['px-2 inline-flex text-xs leading-5 font-semibold rounded-full', user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800']">{{ user.status === 'active' ? 'Aktiv' : 'Gesperrt' }}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span :class="['px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
+                                  user.admin === 'true' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800']">
+                      {{ user.admin === 'true' ? 'Admin' : 'User' }}
+                    </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right">
                     <button @click="openEditModal(user)" class="text-blue-600 hover:text-blue-900 font-semibold transition-colors duration-200">Verwalten</button>
@@ -176,7 +313,9 @@ onMounted(() => {
             <div v-for="user in users" :key="user.id" class="bg-gray-50 p-4 rounded-lg shadow-sm">
             <div class="flex justify-between items-start">
                 <div>
-                <p class="font-bold text-gray-800">{{ user.name }}</p>
+                <p class="font-bold text-gray-800">{{ user.name }}
+                  <span :class="['ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full', user.admin === 'true' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800']">{{ user.admin === 'true' ? 'Admin' : 'User' }}</span>
+                </p>
                 <p class="text-sm text-gray-600">{{ user.email }}</p>
                 </div>
                 <span :class="['px-2 inline-flex text-xs leading-5 font-semibold rounded-full', user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800']">{{ user.status === 'active' ? 'Aktiv' : 'Gesperrt' }}</span>
@@ -211,9 +350,11 @@ onMounted(() => {
         </div>
         <div class="mt-8 pt-6 border-t border-gray-200 flex flex-col sm:flex-row-reverse gap-3">
             <button @click="saveChanges" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Speichern</button>
-            <button v-if="selectedUser.status === 'active'" @click="blockUser" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">Sperren</button>
-            <button v-if="selectedUser.status === 'blocked'" @click="activateUser" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">Freischalten</button>
-            <button @click="deleteUser" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-base font-medium rounded-md shadow-sm text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mr-auto">Löschen</button>
+            <button v-if="selectedUser.status === 'active'" @click="setUserStatus('blocked')" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">Sperren</button>
+            <button v-if="selectedUser.status === 'blocked'" @click="setUserStatus('active')" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">Freischalten</button>
+          <button v-if="selectedUser.admin === 'true'" @click="setAdmin('false')" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-500 hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">Admin entziehen</button>
+          <button v-else @click="setAdmin('true')" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-600">Zum Admin machen</button>
+          <button @click="deleteUser" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-base font-medium rounded-md shadow-sm text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mr-auto">Löschen</button>
         </div>
       </div>
        <div v-if="isAddModalOpen" class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 sm:p-8">

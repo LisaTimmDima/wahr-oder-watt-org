@@ -8,6 +8,7 @@
 // import: Lädt Vue-Funktionen (ref, onMounted) und Icon-Komponenten.
 import { ref, onMounted, computed } from 'vue';
 import { XMarkIcon, PlusIcon } from '@heroicons/vue/24/solid';
+import {BellIcon, CubeIcon, UsersIcon} from "@heroicons/vue/24/outline/index.js";
 
 // ==================================================================================
 // Reactive State: ref() erstellt reaktive Variablen zur Steuerung der UI und zur Speicherung der Daten.
@@ -19,6 +20,8 @@ const selectedItem = ref(null);
 const newItem = ref({ name: '', properties: [] });
 const newPropertyName = ref('');
 const items = ref([]);
+const token = computed(() => localStorage.getItem('jwt'));
+
 
 // BARRIEREFREIHEIT: Reaktive Variablen für Zoom und Kontrast.
 const zoomLevel = ref(1);
@@ -39,10 +42,20 @@ function openEditModal(item) {
   isEditModalOpen.value = true;
 }
 
+function authHeaders() {
+  return {
+    'Accept': 'application/json',
+    'Authorization': `Bearer ${token.value}`
+  };
+}
+
+
 function openAddModal() {
   newItem.value = { name: '', icon: '❓', properties: [] };
   isAddModalOpen.value = true;
 }
+
+
 
 function closeModal() {
   isEditModalOpen.value = false;
@@ -65,12 +78,33 @@ function removeProperty(itemRef, propertyIndex) {
 // API-Methoden (Verantwortlich: Dima)
 // ==================================================================================
 
-async function fetchItems() {
+/**async function fetchItems() {
   console.log("Lade Geräte vom Server...");
   items.value = [
     { id: 1, name: 'Desktop PC', icon: '🖥️', properties: [{ id: 101, name: 'Strom' }, { id: 102, name: 'Tastatur' }]},
     { id: 2, name: 'Smartphone', icon: '📱', properties: [{ id: 201, name: 'Akku' }, { id: 202, name: 'Bluetooth' }]},
   ];
+}*/
+
+async function fetchItems() {
+  try {
+    const res = await fetch('/api/devicesattributes/with-attributes', { headers: authHeaders() });
+    if (!res.ok) throw new Error('Fehler: Geräte mit Attributen');
+    const devices = await res.json();
+
+    items.value = (Array.isArray(devices) ? devices : []).map(d => ({
+      id: d.id,
+      name: d.description,
+      icon: d.imageUrl ?? '📦',
+      properties: (d.attributes ?? []).map(a => ({
+        id: a.id,
+        icon: a.imageUrl,
+        name: a.description
+      }))
+    }));
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 async function handleAddNewItem() {
@@ -162,11 +196,15 @@ onMounted(() => {
                     <span class="font-semibold">{{ item.name }}</span>
                     </div>
                 </td>
-                <td class="px-6 py-4">
+                  <td class="px-6 py-4">
                     <ul class="list-disc list-inside text-sm text-gray-600">
-                    <li v-for="prop in item.properties" :key="prop.id">{{ prop.name }}</li>
+                      <li v-for="prop in item.properties" :key="prop.id" class="flex items-center gap-2">
+                        <img v-if="prop.icon && prop.icon.startsWith('http')" :src="prop.icon" alt="" class="h-5 w-5 object-contain" />
+                        <span v-else class="text-xl">{{ prop.icon || '🔧' }}</span>
+                        <span>{{ prop.name }}</span>
+                      </li>
                     </ul>
-                </td>
+                  </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right">
                     <button @click="openEditModal(item)" class="text-blue-600 hover:text-blue-900 font-semibold">Verwalten</button>
                 </td>

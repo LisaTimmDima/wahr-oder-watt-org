@@ -44,6 +44,9 @@ const currentQuestion = ref({
   correctAnswers: ['e2', 'e4']
 });
 const selectedAnswers = ref([]);
+const loading = ref(true);
+const token = computed(() => localStorage.getItem('jwt'));
+
 
 // BARRIEREFREIHEIT: Reaktive Variablen für Zoom und Kontrast.
 const zoomLevel = ref(1);
@@ -100,6 +103,12 @@ function submitAnswers(isTimeout = false) {
   }
 }
 
+async function fetchCurrentUser() {
+  const resp = await fetch('/api/users/me', { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token.value}` } });
+  if (!resp.ok) throw new Error('Fehler beim Laden der Benutzer');
+  return await resp.json();
+}
+
 function startTimer() {
   clearInterval(timerInterval);
   timer.value = level.value === 1 ? 60 : 10;
@@ -131,13 +140,27 @@ function toggleHighContrast() {
 // Lifecycle Hooks
 // ==================================================================================
 
-onMounted(() => {
+onMounted(async () => {
   if (props.gameDetails) {
     startTimer();
   }
+  loading.value = true;
+  // Aktuellen User laden (Backend) mit Fallback auf localStorage
+  try {
+    const me = await fetchCurrentUser();
+    loggedInPlayer.value = {
+      id: me.id,
+      name: me.username,
+    };
+  } catch {
+    loggedInPlayer.value = {
+      id: Number(localStorage.getItem('currentUserId')),
+      name: localStorage.getItem('currentUsername')
+    };
+  }
 });
 
-onUnmounted(() => {
+onUnmounted( () => {
   clearInterval(timerInterval);
 });
 </script>

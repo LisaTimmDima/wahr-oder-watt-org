@@ -8,12 +8,12 @@
 
 // import: Lädt Vue-Funktionen (ref, onMounted) und Icon-Komponenten.
 import { ref, onMounted, computed } from 'vue';
-import { UserCircleIcon, TrophyIcon, QuestionMarkCircleIcon, ArrowRightOnRectangleIcon, UsersIcon, ChevronRightIcon } from '@heroicons/vue/24/solid';
+import { UserCircleIcon, TrophyIcon, QuestionMarkCircleIcon, ArrowRightOnRectangleIcon, UsersIcon, ChevronRightIcon, ArrowUturnLeftIcon } from '@heroicons/vue/24/solid';
 
 // ==================================================================================
 // Emits: Deklariert Events, die diese Komponente aussenden kann, um mit der Eltern-Komponente (App.vue) zu kommunizieren.
 // ==================================================================================
-const emit = defineEmits(['start-game', 'show-help', 'show-highscores']);
+const emit = defineEmits(['start-game', 'show-help', 'show-highscores', 'show-admin']);
 
 // ==================================================================================
 // Reactive State: ref() erstellt reaktive Variablen, deren Änderungen die UI automatisch aktualisieren.
@@ -41,7 +41,6 @@ const selectedLevel = ref(1);
 const loading = ref(false);
 const error = ref(null);
 const token = computed(() => localStorage.getItem('jwt'));
-let challenger = ref(null);
 
 async function fetchCurrentUser() {
   const resp = await fetch('/api/users/me', { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token.value}` } });
@@ -68,45 +67,14 @@ const containerStyle = computed(() => ({
 // Methoden: Funktionen zur Handhabung von Benutzerinteraktionen und Geschäftslogik.
 // ==================================================================================
 
-async function createDuel(player) {
-  if (!challenger.value) throw new Error('Eigenes Profil nicht geladen');
-  if (!token.value) throw new Error('Kein Token vorhanden');
-  const payload = {
-    challengerId: challenger.value.id,
-    opponentId: player.id,
-    level: selectedLevel.value,
-    currentTime: Date.now()
-  };
-  const resp = await fetch('/api/duels', {
-    method: 'POST',
-    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': `Bearer ${token.value}` },
-    body: JSON.stringify(payload)
-  });
-  if (!resp.ok) {
-    const txt = await resp.text().catch(() => '');
-    throw new Error('Duell konnte nicht erstellt werden: ' + resp.status + ' ' + txt);
-  }
-  return resp.json(); // angenommen Backend gibt Duel-Objekt zurück
-}
 /**
  * @function challengePlayer
  * @author Lisa
  * @description Löst das 'start-game'-Event aus und übergibt die Details zum Gegner und zum Level an die Eltern-Komponente.
  * @param {object} player - Das Spieler-Objekt des Gegners, der herausgefordert wird.
  */
-async function challengePlayer(player) {
-  try {
-    const duel = await createDuel(player);
-    emit('start-game', {
-      duel,
-      opponent: player.id,
-      me: challenger.value.id,
-      level: selectedLevel.value
-    });
-  } catch (e) {
-    console.error(e);
-    alert(e.message);
-  }
+function challengePlayer(player) {
+  emit('start-game', { opponent: player, level: selectedLevel.value });
 }
 
 /**
@@ -116,6 +84,15 @@ async function challengePlayer(player) {
  */
 function onHelpClick() {
   emit('show-help');
+}
+
+/**
+ * @function onAdminClick
+ * @author Lisa
+ * @description Löst das 'show-admin'-Event aus, um die Admin-Ansicht anzuzeigen.
+ */
+function onAdminClick() {
+  emit('show-admin');
 }
 
 /**
@@ -172,16 +149,17 @@ onMounted(async () => {
   try {
     // Aktuellen User laden (Backend) mit Fallback auf localStorage
     try {
-     const me = await fetchCurrentUser();
+      const me = await fetchCurrentUser();
       loggedInUser.value = {
         id: me.id,
         name: me.username,
+        admin: me.admin,
       };
-      challenger.value = me;
-    } catch (e) {
+    } catch {
       loggedInUser.value = {
         id: Number(localStorage.getItem('currentUserId')),
-        name: localStorage.getItem('currentUsername')
+        name: localStorage.getItem('currentUsername'),
+        admin: localStorage.getItem('isAdmin') === 'true'
       };
     }
     const all = await fetchUsers();
@@ -314,6 +292,13 @@ onMounted(async () => {
         </div>
 
       </main>
+      <div v-if="loggedInUser.admin" class="fixed bottom-4 left-4">
+        <button
+            @click="onAdminClick" class="flex items-center gap-2 px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-semibold transition-colors shadow-md" aria-label="Zurück zum Admin-Dashboard" title="Zurück zum Admin-Dashboard">
+          <ArrowUturnLeftIcon class="h-5 w-5" />
+          <span>Zum Admin-Dashboard</span>
+        </button>
+      </div>
 
     </div>
   </div>
