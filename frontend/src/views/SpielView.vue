@@ -8,6 +8,7 @@
 // import: Lädt Vue-Funktionen (ref, computed, onMounted, onUnmounted) und Icon-Komponenten.
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { UserCircleIcon, ClockIcon, ArrowUturnLeftIcon } from '@heroicons/vue/24/solid';
+import {initSse, onEvent, offEvent} from "../service/sseService.js";
 
 // ==================================================================================
 // Emits: Deklariert Events, um mit der Eltern-Komponente (App.vue) zu kommunizieren.
@@ -44,6 +45,9 @@ const currentQuestion = ref({
   correctAnswers: ['e2', 'e4']
 });
 const selectedAnswers = ref([]);
+const disabledAnswers = ref(new Set());
+const maxSelections = 2;
+
 const loading = ref(true);
 const token = computed(() => localStorage.getItem('jwt'));
 
@@ -68,38 +72,43 @@ const containerStyle = computed(() => ({ zoom: zoomLevel.value }));
 // ==================================================================================
 
 function toggleAnswer(answerId) {
-  const index = selectedAnswers.value.indexOf(answerId);
-  if (index === -1) {
+  if (disabledAnswers.value.has(answerId)) return;
+  const idx = selectedAnswers.value.indexOf(answerId);
+  if (idx === -1) {
+    if (selectedAnswers.value.length >= maxSelections) {
+      alert(`Maximal ${maxSelections} Attribute auswählen.`);
+      return;
+    }
     selectedAnswers.value.push(answerId);
   } else {
-    selectedAnswers.value.splice(index, 1);
+    selectedAnswers.value.splice(idx, 1);
   }
 }
 
-function submitAnswers(isTimeout = false) {
+async function submitAnswers(isTimeout = false) {
   clearInterval(timerInterval);
-
-  if (isTimeout) {
-    alert("Zeit abgelaufen!");
-  }
+  if (isTimeout) alert('Zeit abgelaufen!');
 
   let scoreForRound = 0;
   for (const answerId of selectedAnswers.value) {
-    if (currentQuestion.value.correctAnswers.includes(answerId)) {
-      scoreForRound++;
-    }
+    if (currentQuestion.value.correctAnswers && currentQuestion.value.correctAnswers.includes(answerId)) scoreForRound++;
   }
-
   loggedInPlayer.value.score += scoreForRound;
 
-  alert(`Du hast in dieser Runde ${scoreForRound} Punkte erzielt! Gesamt: ${loggedInPlayer.value.score}`);
-
-  if (currentRound.value < maxRounds) {
-    currentRound.value++;
-    selectedAnswers.value = [];
-    startTimer();
-  } else {
-    alert(`Spiel beendet! Endstand: ${loggedInPlayer.value.score}`);
+  const payload = {
+    playerId: loggedInPlayer.value.id,
+    round: currentRound.value,
+    answers: selectedAnswers.value,
+    timeout: !!isTimeout
+  };
+  try {
+    await fetch(`/api/game/${props.gameDetails?.id}/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token.value}` },
+      body: JSON.stringify(payload)
+    });
+  } catch (e) {
+    console.error('Fehler beim Senden der Antworten', e);
   }
 }
 
@@ -109,20 +118,56 @@ async function fetchCurrentUser() {
   return await resp.json();
 }
 
+
 function startTimer() {
   clearInterval(timerInterval);
   timer.value = level.value === 1 ? 60 : 10;
   timerInterval = setInterval(() => {
-    if (timer.value > 0) {
-      timer.value--;
-    } else {
-      submitAnswers(true);
-    }
+    if (timer.value > 0) timer.value--; else submitAnswers(true);
   }, 1000);
 }
 
 function goBackToLobby() {
   emit('show-lobby');
+}
+// SSE handlers for gameplay events
+function onGameStart(ev) {
+  const p = ev.detail || {};
+  if (p.firstQuestion) {
+    const fq = p.firstQuestion;
+    currentQuestion.value = {
+      id: fq.id,
+      item: { name: fq.item?.name || '', icon: fq.item?.icon || '' },
+      answers: (fq.answers || []).map(a => ({ id: a.id, icon: a.icon, text: a.text })),
+      correctAnswers: fq.correctAnswers || []
+    };
+  }
+  startTimer();
+}
+function onQuestion(ev) {
+  const p = ev.detail || {};
+  const q = p.question || p;
+  currentQuestion.value = {
+    id: q.id,
+    item: { name: q.item?.name || '', icon: q.item?.icon || '' },
+    answers: (q.answers || []).map(a => ({ id: a.id, icon: a.icon, text: a.text })),
+    correctAnswers: q.correctAnswers || []
+  };
+  selectedAnswers.value = [];
+  disabledAnswers.value = new Set();
+  startTimer();
+}
+function onAttributeLocked(ev) {
+  const p = ev.detail || {};
+  for (const id of (p.answerIds || [])) disabledAnswers.value.add(id);
+}
+
+function onGameEnd(ev) {
+  const p = ev.detail || {};
+  const selfScore = p.scores?.[loggedInPlayer.value.id];
+  const won = p.winner === loggedInPlayer.value.id;
+  alert(won ? `Du hast gewonnen! Dein Score: ${selfScore}` : `Du hast verloren. Dein Score: ${selfScore}`);
+  clearInterval(timerInterval);
 }
 
 // BARRIEREFREIHEIT: Methoden
@@ -158,10 +203,24 @@ onMounted(async () => {
       name: localStorage.getItem('currentUsername')
     };
   }
+  // ensure SSE active for gameplay events
+  const myId = loggedInPlayer.value.id || Number(localStorage.getItem('currentUserId'));
+  initSse(myId);
+  onEvent('game-start', onGameStart);
+  onEvent('question', onQuestion);
+  onEvent('attribute-locked', onAttributeLocked);
+  onEvent('round-result', onRoundResult);
+  onEvent('game-end', onGameEnd);
+
 });
 
-onUnmounted( () => {
+onUnmounted(() => {
   clearInterval(timerInterval);
+  offEvent('game-start', onGameStart);
+  offEvent('question', onQuestion);
+  offEvent('attribute-locked', onAttributeLocked);
+  offEvent('round-result', onRoundResult);
+  offEvent('game-end', onGameEnd);
 });
 </script>
 

@@ -7,8 +7,9 @@
 // ==================================================================================
 
 // import: Lädt Vue-Funktionen (ref, onMounted) und Icon-Komponenten.
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { UserCircleIcon, TrophyIcon, QuestionMarkCircleIcon, ArrowRightOnRectangleIcon, UsersIcon, ChevronRightIcon, ArrowUturnLeftIcon } from '@heroicons/vue/24/solid';
+import {initSse, onEvent, offEvent} from "../service/sseService.js";
 
 // ==================================================================================
 // Emits: Deklariert Events, die diese Komponente aussenden kann, um mit der Eltern-Komponente (App.vue) zu kommunizieren.
@@ -32,6 +33,8 @@ const loggedInUser = ref({ id: 0, name: 'Lädt...' });
  * @description Speichert die Liste der verfügbaren Spieler, die herausgefordert werden können.
  */
 const availablePlayers = ref([]);
+const showChallengeSent = ref(false);
+let challengeSentTimeout = null;
 
 /**
  * @type {import('vue').Ref<number>}
@@ -134,6 +137,49 @@ function decreaseZoom() {
 function toggleHighContrast() {
   isHighContrast.value = !isHighContrast.value;
 }
+async function sendChallenge(opponentId, mode = 'SPEEDRUN') {
+  const payload = {
+    challengerId: String(currentUser.value.id),
+    challengerUsername: currentUser.value.name,
+    opponentId: String(opponentId),
+    mode
+  };
+  try {
+    const resp = await fetch('/api/game/challenge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token.value}` },
+      body: JSON.stringify(payload)
+    });
+    if (!resp.ok) throw new Error('challenge failed');
+    showChallengeSent.value = true;
+    if (challengeSentTimeout) clearTimeout(challengeSentTimeout);
+    challengeSentTimeout = setTimeout(() => { showChallengeSent.value = false; }, 30000);
+  } catch (e) {
+    console.error('Fehler beim Senden der Challenge', e);
+    alert('Anfrage konnte nicht gesendet werden.');
+  }
+}
+
+// SSE-Handler: challenge responses and game-start routed to parent
+function onChallengeSent(ev) {
+  // gleiche Logik wie before: show popup
+  showChallengeSent.value = true;
+  if (challengeSentTimeout) clearTimeout(challengeSentTimeout);
+  challengeSentTimeout = setTimeout(() => { showChallengeSent.value = false; }, 30000);
+}
+function onChallengeDeclined(ev) {
+  showChallengeSent.value = false;
+  if (challengeSentTimeout) clearTimeout(challengeSentTimeout);
+  alert('Spiel abgelehnt / Zeit überschritten');
+}
+function onGameStart(ev) {
+  const payload = ev.detail || {};
+  // Parent wechselt in Spielansicht; Parent erwartet payload (gameId, mode, firstQuestion, opponentId)
+  emit('enter-game', payload);
+  // clear UI state
+  showChallengeSent.value = false;
+  if (challengeSentTimeout) clearTimeout(challengeSentTimeout);
+}
 
 // ==================================================================================
 // Lifecycle Hooks: Funktionen, die Vue zu bestimmten Zeitpunkten im Lebenszyklus einer Komponente automatisch aufruft.
@@ -174,7 +220,19 @@ onMounted(async () => {
   } finally {
     loading.value = false;
   }
+  initSse(currentUser.value.id);
+  onEvent('challenge-sent', onChallengeSent);
+  onEvent('challenge-declined', onChallengeDeclined);
+  onEvent('game-start', onGameStart);
 });
+
+onUnmounted(() => {
+  offEvent('challenge-sent', onChallengeSent);
+  offEvent('challenge-declined', onChallengeDeclined);
+  offEvent('game-start', onGameStart);
+  if (challengeSentTimeout) clearTimeout(challengeSentTimeout);
+});
+export { sendChallenge, showChallengeSent, currentUser };
 </script>
 
 <template>
