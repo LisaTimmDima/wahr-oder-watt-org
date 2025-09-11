@@ -8,7 +8,7 @@
 
 // import: Lädt Vue-Funktionen (ref, onMounted) und Icon-Komponenten.
 import { ref, onMounted, computed } from 'vue';
-import { UserCircleIcon, TrophyIcon, QuestionMarkCircleIcon, ArrowRightOnRectangleIcon, UsersIcon, ChevronRightIcon } from '@heroicons/vue/24/solid';
+import { UserCircleIcon, TrophyIcon, QuestionMarkCircleIcon, ArrowRightOnRectangleIcon, UsersIcon, ChevronRightIcon, ArrowUturnLeftIcon } from '@heroicons/vue/24/solid';
 
 // ==================================================================================
 // Emits: Deklariert Events, die diese Komponente aussenden kann, um mit der Eltern-Komponente (App.vue) zu kommunizieren.
@@ -203,11 +203,6 @@ onMounted(async () => {
             <button @click="increaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">+</button>
           </div>
           <button @click="toggleHighContrast" class="px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">Kontrast</button>
-          <button
-              @click="onAdminClick" class="flex items-center gap-2 px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300 font-semibold transition-colors" aria-label="Admin Bereich öffnen" title="Admin">
-            <UsersIcon class="h-5 w-5 text-gray-600" />
-            <span>Admin</span>
-          </button>
           <button @click="onHighscoresClick" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors">
             <TrophyIcon class="h-6 w-6" />
             <span>Highscores</span>
@@ -297,6 +292,13 @@ onMounted(async () => {
         </div>
 
       </main>
+      <div class="fixed bottom-4 left-4">
+        <button
+            @click="onAdminClick" class="flex items-center gap-2 px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-semibold transition-colors shadow-md" aria-label="Zurück zum Admin-Dashboard" title="Zurück zum Admin-Dashboard">
+          <ArrowUturnLeftIcon class="h-5 w-5" />
+          <span>Zurück zum Admin-Dashboard</span>
+        </button>
+      </div>
 
     </div>
   </div>
