@@ -1,5 +1,4 @@
 <!--
-  File: AdminLayout.vue
   Author: Lisa
   Description: Dieses Layout stellt die Hauptstruktur für den Admin-Bereich der Anwendung bereit.
                Es enthält die seitliche Navigationsleiste, die Kopfzeile und den Hauptinhaltsbereich,

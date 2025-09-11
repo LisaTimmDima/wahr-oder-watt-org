@@ -16,6 +16,9 @@ WORKDIR /app/backend
 COPY backend/pom.xml ./
 RUN mvn dependency:go-offline
 COPY backend/ .
+# Copy frontend build into backend resources
+COPY --from=frontend-build /app/frontend/dist src/main/resources/static/
+RUN ls -l src/main/resources/static/ # Add this line for debugging
 RUN mvn package -DskipTests
 
 # -------------------------
@@ -27,10 +30,9 @@ WORKDIR /app
 # copy backend jar
 COPY --from=backend-build /app/backend/target/*.jar ./app.jar
 
-# copy frontend build in sb static
-COPY --from=frontend-build /app/frontend/dist ./static
-
 # port
 ENV PORT=8080
 
 ENTRYPOINT ["java","-jar","app.jar"]
+
+
