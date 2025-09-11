@@ -8,7 +8,7 @@
 
 // import: Lädt Vue-Funktionen (ref, onMounted) und Icon-Komponenten.
 import { ref, onMounted, computed } from 'vue';
-import { UserCircleIcon, TrophyIcon, QuestionMarkCircleIcon, ArrowRightOnRectangleIcon, UsersIcon, ChevronRightIcon, ArrowUturnLeftIcon } from '@heroicons/vue/24/solid';
+import { UserCircleIcon, TrophyIcon, QuestionMarkCircleIcon, ArrowRightOnRectangleIcon, UsersIcon, ChevronRightIcon, ArrowUturnLeftIcon, Cog6ToothIcon } from '@heroicons/vue/24/solid';
 
 // ==================================================================================
 // Emits: Deklariert Events, die diese Komponente aussenden kann, um mit der Eltern-Komponente (App.vue) zu kommunizieren.
@@ -38,6 +38,8 @@ const availablePlayers = ref([]);
  * @description Speichert das vom Benutzer ausgewählte Spiellevel (1 oder 2).
  */
 const selectedLevel = ref(1);
+const selectedPlayer = ref(null);
+const invitationSent = ref(false);
 const loading = ref(false);
 const error = ref(null);
 const token = computed(() => localStorage.getItem('jwt'));
@@ -68,13 +70,35 @@ const containerStyle = computed(() => ({
 // ==================================================================================
 
 /**
- * @function challengePlayer
+ * @function startGame
  * @author Lisa
  * @description Löst das 'start-game'-Event aus und übergibt die Details zum Gegner und zum Level an die Eltern-Komponente.
- * @param {object} player - Das Spieler-Objekt des Gegners, der herausgefordert wird.
  */
-function challengePlayer(player) {
-  emit('start-game', { opponent: player, level: selectedLevel.value });
+function startGame() {
+  if (selectedPlayer.value && selectedLevel.value) {
+    invitationSent.value = true;
+    // Simulate a delay to show the message
+    setTimeout(() => {
+        emit('start-game', { opponent: selectedPlayer.value, level: selectedLevel.value });
+        // Reset state for when the user comes back to the lobby
+        invitationSent.value = false;
+        selectedPlayer.value = null;
+    }, 3000); // 3 second delay
+  }
+}
+
+/**
+ * @function togglePlayerSelection
+ * @author Lisa
+ * @description Wählt einen Spieler aus oder ab.
+ * @param {object} player - Das Spieler-Objekt.
+ */
+function togglePlayerSelection(player) {
+  if (selectedPlayer.value && selectedPlayer.value.id === player.id) {
+    selectedPlayer.value = null;
+  } else {
+    selectedPlayer.value = player;
+  }
 }
 
 /**
@@ -193,28 +217,42 @@ onMounted(async () => {
       <header class="flex flex-col sm:flex-row justify-between items-center mb-8">
         <div class="flex items-center gap-4 mb-4 sm:mb-0">
           <img src="../assets/logo.svg" alt="Logo" class="h-24 w-auto">
-          <div class="text-2xl font-bold text-gray-800">Lobby</div>
+          <div class="text-4xl font-bold text-gray-800">Lobby</div>
         </div>
-        <div class="flex items-center gap-4">
-          <!-- BARRIEREFREIHEIT: Steuerelemente für Zoom und Kontrast. -->
-          <div class="flex items-center gap-2">
-            <span class="text-sm text-gray-600">Zoom:</span>
-            <button @click="decreaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">-</button>
-            <button @click="increaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">+</button>
+        <div class="flex items-center">
+          <!-- Group 1: Accessibility -->
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-600">Zoom:</span>
+              <button @click="decreaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">-</button>
+              <button @click="increaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">+</button>
+            </div>
+            <button @click="toggleHighContrast" class="px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">Kontrast</button>
           </div>
-          <button @click="toggleHighContrast" class="px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">Kontrast</button>
-          <button @click="onHighscoresClick" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors">
-            <TrophyIcon class="h-6 w-6" />
-            <span>Highscores</span>
-          </button>
-          <button @click="onHelpClick" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors">
-            <QuestionMarkCircleIcon class="h-6 w-6" />
-            <span>Hilfe</span>
-          </button>
-          <button @click="logout" class="flex items-center gap-2 text-red-500 hover:text-red-700 font-semibold transition-colors">
-            <ArrowRightOnRectangleIcon class="h-6 w-6" />
-            <span>Abmelden</span>
-          </button>
+
+          <div class="border-l border-gray-300 h-6 mx-4"></div>
+
+          <!-- Group 2: User Actions -->
+          <div class="flex items-center gap-4">
+            <button @click="onHighscoresClick" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors">
+              <TrophyIcon class="h-6 w-6" />
+              <span>Highscores</span>
+            </button>
+            <button @click="onHelpClick" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors">
+              <QuestionMarkCircleIcon class="h-6 w-6" />
+              <span>Hilfe</span>
+            </button>
+          </div>
+
+          <div class="border-l border-gray-300 h-6 mx-4"></div>
+
+          <!-- Group 3: Logout -->
+          <div class="flex items-center">
+            <button @click="logout" class="flex items-center gap-2 text-red-500 hover:text-red-700 font-semibold transition-colors">
+              <ArrowRightOnRectangleIcon class="h-6 w-6" />
+              <span>Abmelden</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -222,7 +260,10 @@ onMounted(async () => {
 
         <!-- Spalte für Spieleinstellungen -->
         <div class="lg:col-span-1 bg-white rounded-2xl shadow-lg p-6">
-          <h2 class="text-2xl font-bold text-gray-800 mb-6">Spieleinstellungen</h2>
+          <div class="flex items-center gap-3 mb-6">
+            <Cog6ToothIcon class="h-8 w-8 text-gray-500"/>
+            <h2 class="text-2xl font-bold text-gray-800">Spieleinstellungen</h2>
+          </div>
 
           <div class="space-y-4">
             <div
@@ -254,20 +295,30 @@ onMounted(async () => {
             </div>
           </div>
 
+          <!-- Admin Button -->
+          <div v-if="loggedInUser.admin" class="mt-8 pt-6 border-t border-gray-200">
+            <button
+                @click="onAdminClick" class="flex w-full justify-center items-center gap-2 px-4 py-2 text-sm bg-transparent border-2 border-blue-500 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white font-semibold transition-colors" aria-label="Zum Admin-Dashboard" title="Zum Admin-Dashboard">
+              <ArrowUturnLeftIcon class="h-5 w-5" />
+              <span>Zum Admin-Dashboard</span>
+            </button>
+          </div>
+
         </div>
 
         <!-- Spalte für verfügbare Spieler -->
-        <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6">
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6 flex flex-col">
           <div class="flex items-center gap-3 mb-6">
             <UsersIcon class="h-8 w-8 text-gray-500"/>
             <h2 class="text-2xl font-bold text-gray-800">Verfügbare Spieler</h2>
           </div>
-          <div class="overflow-y-auto h-96 pr-2">
+          <div class="overflow-y-auto h-96 pr-2 flex-grow">
             <ul v-if="availablePlayers.length > 0" class="space-y-3">
               <li
                 v-for="player in availablePlayers"
                 :key="player.id"
-                class="flex justify-between items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors group"
+                @click="togglePlayerSelection(player)"
+                :class="['flex justify-between items-center p-4 rounded-xl transition-colors cursor-pointer', selectedPlayer && selectedPlayer.id === player.id ? 'bg-blue-100 border-2 border-blue-500' : 'bg-gray-50 hover:bg-gray-100']"
               >
                 <div class="flex items-center gap-4">
                     <div class="bg-gray-200 p-2 rounded-full">
@@ -275,13 +326,6 @@ onMounted(async () => {
                     </div>
                     <span class="text-lg font-medium text-gray-800">{{ player.name }}</span>
                 </div>
-                <button
-                  @click="challengePlayer(player)"
-                  class="bg-blue-500 text-white font-bold py-2 px-6 rounded-full hover:bg-blue-600 transition-all duration-200 transform opacity-0 group-hover:opacity-100 group-hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center gap-2"
-                >
-                  <span>Spielen</span>
-                  <ChevronRightIcon class="h-5 w-5"/>
-                </button>
               </li>
             </ul>
             <!-- Wird angezeigt, während die Spielerliste lädt -->
@@ -289,16 +333,25 @@ onMounted(async () => {
               <p class="text-lg">Suche nach Spielern...</p>
             </div>
           </div>
+          <div class="mt-6">
+            <button
+              @click="startGame"
+              :disabled="!selectedPlayer || !selectedLevel || invitationSent"
+              :class="['w-full text-white font-bold py-3 px-6 rounded-lg transition-colors text-lg flex items-center justify-center', !selectedPlayer || !selectedLevel || invitationSent ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600']"
+            >
+              <svg v-if="invitationSent" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>{{ invitationSent ? 'Einladung wird gesendet...' : 'Spiel starten' }}</span>
+            </button>
+            <div v-if="invitationSent" class="mt-4 text-center p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+              <p>Einladung an <strong>{{ selectedPlayer.name }}</strong> gesendet. Warte auf seine Antwort...</p>
+            </div>
+          </div>
         </div>
 
       </main>
-      <div v-if="loggedInUser.admin" class="fixed bottom-4 left-4">
-        <button
-            @click="onAdminClick" class="flex items-center gap-2 px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-semibold transition-colors shadow-md" aria-label="Zurück zum Admin-Dashboard" title="Zurück zum Admin-Dashboard">
-          <ArrowUturnLeftIcon class="h-5 w-5" />
-          <span>Zum Admin-Dashboard</span>
-        </button>
-      </div>
 
     </div>
   </div>
