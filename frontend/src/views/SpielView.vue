@@ -183,7 +183,7 @@ onUnmounted( () => {
           <ArrowUturnLeftIcon class="h-6 w-6" />
           <span class="hidden sm:inline">Zurück zur Lobby</span>
         </button>
-        <img src="../assets/logo.svg" alt="Wahr oder Watt Logo" class="h-20 sm:h-24 w-auto">
+        <img src="../assets/gluehbirne.svg" alt="Wahr oder Watt Logo" class="h-20 sm:h-24 w-auto" style="transform: scale(0.8);">
       </div>
       <div class="bg-white rounded-xl shadow-md p-2 sm:p-4 grid grid-cols-3 items-center gap-2 sm:gap-4">
         

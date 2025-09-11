@@ -216,8 +216,8 @@ onMounted(async () => {
 
       <header class="flex flex-col sm:flex-row justify-between items-center mb-8">
         <div class="flex items-center gap-4 mb-4 sm:mb-0">
-          <img src="../assets/logo.svg" alt="Logo" class="h-24 w-auto">
-          <div class="text-4xl font-bold text-gray-800">Lobby</div>
+          <img src="../assets/gluehbirne.svg" alt="Logo" class="h-24 w-auto" style="transform: scale(0.8);">
+          <div class="text-4xl font-bold text-gray-800">Wahr oder Watt?</div>
         </div>
         <div class="flex items-center">
           <!-- Group 1: Accessibility -->
