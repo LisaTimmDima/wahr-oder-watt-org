@@ -13,6 +13,7 @@ import { UsersIcon, CubeIcon, BellIcon } from '@heroicons/vue/24/outline';
 // Reactive State: ref() erstellt reaktive Variablen zur Speicherung der Dashboard-Daten.
 // Verantwortlich: Lisa
 // ==================================================================================
+const token = computed(() => localStorage.getItem('jwt'));
 
 /**
  * @type {import('vue').Ref<Array<object>>}
@@ -20,9 +21,9 @@ import { UsersIcon, CubeIcon, BellIcon } from '@heroicons/vue/24/outline';
  * @todo Aktuell hartkodiert. Sollte durch einen API-Aufruf in `fetchStats` dynamisch geladen werden.
  */
 const stats = ref([
-  { name: 'Benutzer zur Freischaltung', value: 1, icon: BellIcon, color: 'bg-red-500' },
-  { name: 'Gesamte Benutzer', value: 12, icon: UsersIcon, color: 'bg-blue-500' },
-  { name: 'Gesamte Geräte', value: 2, icon: CubeIcon, color: 'bg-yellow-500' },
+  { name: 'Benutzer zur Freischaltung', value: 0, icon: BellIcon, color: 'bg-red-500' },
+  { name: 'Gesamte Benutzer', value: 0, icon: UsersIcon, color: 'bg-blue-500' },
+  { name: 'Gesamte Geräte', value: 0, icon: CubeIcon, color: 'bg-yellow-500' },
 ]);
 
 // BARRIEREFREIHEIT: Reaktive Variable für die Zoom-Stufe.
@@ -44,15 +45,47 @@ const containerStyle = computed(() => ({
 // Methoden: Zukünftige Funktionen zum Laden der Daten.
 // ==================================================================================
 
+
+function authHeaders() {
+  return {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token.value}`
+  };
+}
 /**
  * @function fetchStats
  * @author Dima
  * @description (Zukünftige Funktion) Lädt die Dashboard-Statistiken vom Server.
  * @todo Diese Funktion muss implementiert werden, um die `stats`-Variable dynamisch zu füllen.
  */
-// async function fetchStats() { ... }
+async function fetchStats() {
+  try {
+    const [notAvailRes, usersRes, devicesRes] = await Promise.all([
+      fetch('/api/users/not_available', { headers: authHeaders() }),
+      fetch('/api/users', { headers: authHeaders() }),
+      fetch('/api/devices', { headers: authHeaders() })
+    ]);
 
+    if (!notAvailRes.ok) throw new Error('Fehler: nicht freigeschaltete Benutzer');
+    if (!usersRes.ok) throw new Error('Fehler: Benutzer');
+    if (!devicesRes.ok) throw new Error('Fehler: Geräte');
 
+    const [notAvail, users, devices] = await Promise.all([
+      notAvailRes.json(),
+      usersRes.json(),
+      devicesRes.json()
+    ]);
+
+    stats.value = [
+      { name: 'Benutzer zur Freischaltung', value: Array.isArray(notAvail) ? notAvail.length : 0, icon: BellIcon, color: 'bg-red-500' },
+      { name: 'Gesamte Benutzer', value: Array.isArray(users) ? users.length : 0, icon: UsersIcon, color: 'bg-blue-500' },
+      { name: 'Gesamte Geräte', value: Array.isArray(devices) ? devices.length : 0, icon: CubeIcon, color: 'bg-yellow-500' },
+    ];
+  } catch (e) {
+    console.error(e);
+  }
+}
 // ==================================================================================
 // Lifecycle Hooks: Code, der zu bestimmten Zeitpunkten im Lebenszyklus der Komponente ausgeführt wird.
 // ==================================================================================
@@ -61,7 +94,7 @@ const containerStyle = computed(() => ({
  * onMounted(): Wird ausgeführt, nachdem die Komponente in das DOM eingehängt wurde.
  * @todo Sobald `fetchStats` implementiert ist, sollte es hier aufgerufen werden.
  */
-// onMounted(fetchStats);
+onMounted(fetchStats);
 
 // BARRIEREFREIHEIT: Methoden zur Anpassung der Zoom-Stufe.
 function increaseZoom() {

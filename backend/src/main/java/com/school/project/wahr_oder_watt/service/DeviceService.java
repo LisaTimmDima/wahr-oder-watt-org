@@ -1,5 +1,6 @@
 package com.school.project.wahr_oder_watt.service;
 
+import com.school.project.wahr_oder_watt.dto.DeviceDto;
 import com.school.project.wahr_oder_watt.model.Device;
 import com.school.project.wahr_oder_watt.repository.DeviceRepository;
 import java.util.List;
@@ -17,10 +18,12 @@ public class DeviceService {
    *
    * @return Liste aller Geräte.
    */
-  public List<Device> findAll() {
-    return deviceRepository.findAll();
+  public List<DeviceDto> findAll() {
+    return deviceRepository.findAll()
+        .stream()
+        .map(this::toDto)
+        .toList();
   }
-
   /**
    * Sucht ein Gerät anhand der ID.
    *
@@ -58,6 +61,10 @@ public class DeviceService {
     existingDevice.setActive(device.isActive());
     existingDevice.setAttributes(device.getAttributes());
     return deviceRepository.save(existingDevice);
+  }
+
+  private DeviceDto toDto(Device d) {
+    return new DeviceDto(d.getId(), d.getDescription(), d.getImageUrl());
   }
 
   /**

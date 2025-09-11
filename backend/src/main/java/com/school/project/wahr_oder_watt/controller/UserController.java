@@ -45,35 +45,55 @@ public class UserController {
             .toList()
     );
   }
+
+  @GetMapping("/not_available")
+  public ResponseEntity<List<User>> getNotAvailableUsers() {
+    return ResponseEntity.ok(
+        userService.findAll().stream()
+            .filter(u -> !u.isEnabled()) // Voraussetzung: Methode/Flag existiert
+            .toList()
+    );
+  }
+
 /**
    * Gibt den aktuell angemeldeten Benutzer zurück.
    */
 @GetMapping("/me")
-@ResponseStatus(HttpStatus.OK)
-public Map<String, Object> me(Authentication authentication) {
-  Logger log1 = log;
-  log1.info(authentication.toString());
-  Map<String, Object> dto = new HashMap<>();
+public ResponseEntity<Map<String, Object>> me(Authentication authentication) {
   if (authentication == null) {
-    dto.put("id", 0);
-    dto.put("username", "unknown");
-    return dto;
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+        .body(Map.of("id", 0, "username", "unknown"));
   }
-  User user = userService.findByEmail(authentication.getName());
+
+  log.info("Authenticated as: {}", authentication.getName());
+  String identifier = authentication.getName();
+
+  // Versuche zuerst per Username, dann per E-Mail
+  User user = null;
+  try {
+    user = userService.findByUsername(identifier); // falls vorhanden
+  } catch (Exception ignored) { /* Methode evtl. nicht vorhanden */ }
+
   if (user == null) {
-    dto.put("id", 0);
-    dto.put("username", "unknown");
-    return dto;
+    user = userService.findByEmail(identifier);
   }
+
+  if (user == null) {
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+        .body(Map.of("id", 0, "username", "unknown"));
+  }
+
+  Map<String, Object> dto = new HashMap<>();
   dto.put("id", user.getId());
   dto.put("username", user.getUsername());
-  return dto;
+  dto.put("admin", user.isAdmin());
+  return ResponseEntity.ok(dto);
 }
 
   /**
    * Gibt einen Benutzer anhand der ID zurück.
    */
-  @GetMapping("/{id}")
+  @GetMapping("/{id:\\d+}")
   public ResponseEntity<User> getUser(@PathVariable Long id) {
     User user = userService.findById(id);
     return ResponseEntity.ok(user);
@@ -91,7 +111,7 @@ public Map<String, Object> me(Authentication authentication) {
   /**
    * Aktualisiert einen bestehenden Benutzer.
    */
-  @PutMapping("/{id}")
+  @PutMapping("/{id:\\d+}")
   public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
     User updated = userService.update(id, user);
     return ResponseEntity.ok(updated);
@@ -100,7 +120,7 @@ public Map<String, Object> me(Authentication authentication) {
   /**
    * Löscht einen Benutzer anhand der ID.
    */
-  @DeleteMapping("/{id}")
+  @DeleteMapping("/{id:\\d+}")
   public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
     userService.delete(id);
     return ResponseEntity.noContent().build();

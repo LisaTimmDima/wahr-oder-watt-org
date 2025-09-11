@@ -8,7 +8,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -55,5 +57,5 @@ public class Device {
       joinColumns = @JoinColumn(name = "device_id"),
       inverseJoinColumns = @JoinColumn(name = "attribute_id")
   )
-  private List<Attribute> attributes;
+  private Set<Attribute> attributes = new HashSet<>();
 }

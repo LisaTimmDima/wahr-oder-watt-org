@@ -58,7 +58,6 @@ public class AttributeService {
     Attribute existingAttribute = findById(id);
     existingAttribute.setImageUrl(attribute.getImageUrl());
     existingAttribute.setDescription(attribute.getDescription());
-    existingAttribute.setLockedBy(attribute.getLockedBy());
     return attributeRepository.save(existingAttribute);
   }
 

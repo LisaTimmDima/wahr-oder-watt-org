@@ -8,12 +8,12 @@
 
 // import: Lädt Vue-Funktionen (ref, onMounted) und Icon-Komponenten.
 import { ref, onMounted, computed } from 'vue';
-import { UserCircleIcon, TrophyIcon, QuestionMarkCircleIcon, ArrowRightOnRectangleIcon, UsersIcon, ChevronRightIcon } from '@heroicons/vue/24/solid';
+import { UserCircleIcon, TrophyIcon, QuestionMarkCircleIcon, ArrowRightOnRectangleIcon, UsersIcon, ChevronRightIcon, ArrowUturnLeftIcon } from '@heroicons/vue/24/solid';
 
 // ==================================================================================
 // Emits: Deklariert Events, die diese Komponente aussenden kann, um mit der Eltern-Komponente (App.vue) zu kommunizieren.
 // ==================================================================================
-const emit = defineEmits(['start-game', 'show-help', 'show-highscores']);
+const emit = defineEmits(['start-game', 'show-help', 'show-highscores', 'show-admin']);
 
 // ==================================================================================
 // Reactive State: ref() erstellt reaktive Variablen, deren Änderungen die UI automatisch aktualisieren.
@@ -87,6 +87,15 @@ function onHelpClick() {
 }
 
 /**
+ * @function onAdminClick
+ * @author Lisa
+ * @description Löst das 'show-admin'-Event aus, um die Admin-Ansicht anzuzeigen.
+ */
+function onAdminClick() {
+  emit('show-admin');
+}
+
+/**
  * @function onHighscoresClick
  * @author Lisa
  * @description Löst das 'show-highscores'-Event aus, um die Highscore-Ansicht anzuzeigen.
@@ -144,11 +153,13 @@ onMounted(async () => {
       loggedInUser.value = {
         id: me.id,
         name: me.username,
+        admin: me.admin,
       };
-    } catch (e) {
+    } catch {
       loggedInUser.value = {
         id: Number(localStorage.getItem('currentUserId')),
-        name: localStorage.getItem('currentUsername')
+        name: localStorage.getItem('currentUsername'),
+        admin: localStorage.getItem('isAdmin') === 'true'
       };
     }
     const all = await fetchUsers();
@@ -281,6 +292,13 @@ onMounted(async () => {
         </div>
 
       </main>
+      <div v-if="loggedInUser.admin" class="fixed bottom-4 left-4">
+        <button
+            @click="onAdminClick" class="flex items-center gap-2 px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-semibold transition-colors shadow-md" aria-label="Zurück zum Admin-Dashboard" title="Zurück zum Admin-Dashboard">
+          <ArrowUturnLeftIcon class="h-5 w-5" />
+          <span>Zum Admin-Dashboard</span>
+        </button>
+      </div>
 
     </div>
   </div>

@@ -1,5 +1,6 @@
 package com.school.project.wahr_oder_watt.controller;
 
+import com.school.project.wahr_oder_watt.dto.DeviceDto;
 import com.school.project.wahr_oder_watt.model.Device;
 import com.school.project.wahr_oder_watt.service.DeviceService;
 import lombok.RequiredArgsConstructor;
@@ -21,9 +22,10 @@ public class DeviceController {
   /**
    * Gibt alle Geräte zurück.
    */
+
   @GetMapping
-  public List<Device> getAllDevices() {
-    return deviceService.findAll();
+  public ResponseEntity<List<DeviceDto>> getAllDevices() {
+    return ResponseEntity.ok(deviceService.findAll());
   }
 
   /**

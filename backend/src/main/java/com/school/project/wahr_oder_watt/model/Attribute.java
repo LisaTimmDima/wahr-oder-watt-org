@@ -1,11 +1,16 @@
 package com.school.project.wahr_oder_watt.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,19 +36,15 @@ public class Attribute {
   /**
    * imageUrl ist die URL zu einem Bild, das das Attribut repräsentiert.
    */
+  @Column(name = "image_url")
   private String imageUrl;
 
   /**
    * description ist eine textuelle Beschreibung des Attributs.
    */
+  @Column(name = "description")
   private String description;
 
-  /**
-   * lockedBy gibt an, welcher Benutzer dieses Attribut gesperrt hat.
-   * Dies kann verwendet werden, um zu verhindern, dass mehrere Benutzer gleichzeitig dasselbe Attribut verwenden.
-   */
-  @ManyToOne
-  @JoinColumn(name = "user_id")
-  private User lockedBy;
-
+  @ManyToMany(mappedBy = "attributes", fetch = FetchType.LAZY)
+  private Set<Device> devices = new HashSet<>();
 }
