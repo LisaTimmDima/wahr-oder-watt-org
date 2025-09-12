@@ -180,7 +180,7 @@ onMounted(async () => {
       <!-- Kopfzeile -->
       <header class="bg-white shadow-md p-4 flex justify-end items-center z-20">
         <div class="flex items-center gap-6">
-           <button @click="handleAdminPlay" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors">
+           <button @click="handleAdminPlay" class="inline-flex items-center gap-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200">
             <PlayIcon class="h-6 w-6" />
             <span>Spielen</span>
           </button>
