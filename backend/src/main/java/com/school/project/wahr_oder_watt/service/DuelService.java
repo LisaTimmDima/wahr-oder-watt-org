@@ -1,7 +1,12 @@
 package com.school.project.wahr_oder_watt.service;
 
 import com.school.project.wahr_oder_watt.model.Duel;
+import static com.school.project.wahr_oder_watt.model.DuelMode.*;
+import static com.school.project.wahr_oder_watt.model.DuelStatus.*;
 import com.school.project.wahr_oder_watt.repository.DuelRepository;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +20,7 @@ import java.util.List;
 public class DuelService {
 
   private final DuelRepository duelRepository;
+  private final UserService userService;
 
   /**
    * Gibt alle Duelle zurück.
@@ -74,8 +80,27 @@ public class DuelService {
     duelRepository.deleteById(id);
   }
 
-  public Duel instantiateDuel(Duel duel) {
-    //TODO: Logik zur Initialisierung eines neuen Duells
+  /**
+   * Instanziiert ein neues Duell mit den gegebenen Parametern.
+   *
+   * @param challengerId ID des Herausfordernden.
+   * @param opponentId ID des Herausgeforderten.
+   * @param level Name des Spielmodus (z.B. "Speedrun", "Rundenduell").
+   * @param currentTime Startzeit des Duells im Format "yyyy-MM-dd HH:mm:ss".
+   * @return Das instanziierte Duell.
+   * @throws ParseException falls die Startzeit nicht im korrekten Format ist.
+   */
+  public Duel instantiateDuel(Long challengerId, Long opponentId,
+      int level, long currentTime) {
+    /**
+     * Instanziiert ein neues Duell mit den übergebenen Parametern.
+     */
+    Duel duel = new Duel();
+    duel.getPlayers().add(userService.findById(challengerId));
+    duel.getPlayers().add(userService.findById(opponentId));
+    duel.setMode(level == 1 ? SPEEDRUN : RUNDENDUELL);
+    duel.setPlaytime(new Date(currentTime));
+    duel.setStatus(RUNNING);
     return duel;
   }
 }

@@ -1,7 +1,9 @@
 package com.school.project.wahr_oder_watt.controller;
 
+import com.school.project.wahr_oder_watt.dto.DuelDto;
 import com.school.project.wahr_oder_watt.model.Duel;
 import com.school.project.wahr_oder_watt.service.DuelService;
+import java.text.ParseException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,9 +41,15 @@ public class DuelController {
    * Erstellt ein neues Duell.
    */
   @PostMapping
-  public ResponseEntity<Duel> createDuel(@RequestBody Duel duel) {
-    Duel created = duelService.save(duel);
-    return ResponseEntity.ok(created);
+  public ResponseEntity<Duel> createDuel(@RequestBody DuelDto duelDto) {
+    Long challengerId = duelDto.getChallengerId();
+    Long opponentId = duelDto.getOpponentId();
+    int level = duelDto.getLevel();
+    long currentTime = duelDto.getCurrentTime();
+
+    Duel duel = duelService.instantiateDuel(challengerId, opponentId, level, currentTime);
+    duel = duelService.save(duel);
+    return ResponseEntity.ok(duel);
   }
 
   /**
