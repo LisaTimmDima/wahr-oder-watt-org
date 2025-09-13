@@ -61,4 +61,27 @@ public class DuelRoundController {
     duelRoundService.delete(id);
     return ResponseEntity.noContent().build();
   }
+
+  /**
+   * Spieler wählt Attribute für die Duellrunde aus.
+   */
+  @PostMapping("/{id}/select-attributes")
+  public ResponseEntity<Void> selectAttributes(
+      @PathVariable Long id,
+      @RequestParam Long playerId,
+      @RequestBody List<String> selectedAttributes) {
+    duelRoundService.selectAttributes(id, playerId, selectedAttributes);
+    return ResponseEntity.ok().build();
+  }
+
+  /**
+   * Spieler bestätigt seine Auswahl für die Duellrunde.
+   */
+  @PostMapping("/{id}/confirm-selection")
+  public ResponseEntity<Void> confirmSelection(
+      @PathVariable Long id,
+      @RequestParam Long playerId) {
+    duelRoundService.confirmSelection(id, playerId);
+    return ResponseEntity.ok().build();
+  }
 }

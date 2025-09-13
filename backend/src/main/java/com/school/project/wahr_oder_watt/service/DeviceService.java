@@ -75,4 +75,14 @@ public class DeviceService {
   public void delete(Long id) {
     deviceRepository.deleteById(id);
   }
+
+  public List<String> getDeviceAttributes(Device device) {
+    if (device == null || device.getAttributes() == null) {
+      return List.of();
+    }
+    return device.getAttributes()
+        .stream()
+        .map(attribute -> attribute.getDescription())
+        .toList();
+  }
 }

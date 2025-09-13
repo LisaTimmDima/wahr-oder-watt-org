@@ -40,6 +40,16 @@ public class Duel {
   private List<User> players;
 
   /**
+   * challengerId ist die ID des herausfordernden Spielers.
+   * opponentId ist die ID des herausgeforderten Spielers.
+   * challengerLeft und opponentLeft geben an, ob ein Spieler das Duell verlassen hat.
+   */
+  private Long challengerId;
+  private Long opponentId;
+  private boolean challengerLeft = false;
+  private boolean opponentLeft = false;
+
+  /**
    * mode gibt den Modus des Duells an (z.B. "Speedrun", "Rundenduell").
    */
   @Enumerated(EnumType.STRING)
@@ -61,4 +71,18 @@ public class Duel {
    * playtime gibt die Zeit an, wie lange das Duell verläuft.
    */
   private Date playtime;
+
+  /**
+   * Die Methode removePlayer markiert einen Spieler als verlassen.
+   * Wenn der Spieler der Herausforderer ist, wird challengerLeft auf true gesetzt.
+   * Wenn der Spieler der Herausgeforderte ist, wird opponentLeft auf true gesetzt.
+   * @param playerId
+   */
+  public void removePlayer(Long playerId) {
+    if (challengerId != null && challengerId.equals(playerId)) {
+      challengerLeft = true;
+    } else if (opponentId != null && opponentId.equals(playerId)) {
+      opponentLeft = true;
+    }
+  }
 }

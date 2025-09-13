@@ -7,7 +7,7 @@
 // ==================================================================================
 
 // import: Lädt Vue-Funktionen (ref, onMounted) und Icon-Komponenten.
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
 import { UserCircleIcon, TrophyIcon, QuestionMarkCircleIcon, ArrowRightOnRectangleIcon, UsersIcon, ChevronRightIcon, ArrowUturnLeftIcon, Cog6ToothIcon } from '@heroicons/vue/24/solid';
 
 // ==================================================================================
@@ -74,18 +74,60 @@ const containerStyle = computed(() => ({
  * @author Lisa
  * @description Löst das 'start-game'-Event aus und übergibt die Details zum Gegner und zum Level an die Eltern-Komponente.
  */
-function startGame() {
+async function startGame() {
   if (selectedPlayer.value && selectedLevel.value) {
     invitationSent.value = true;
-    // Simulate a delay to show the message
-    setTimeout(() => {
-        emit('start-game', { opponent: selectedPlayer.value, level: selectedLevel.value });
-        // Reset state for when the user comes back to the lobby
-        invitationSent.value = false;
-        selectedPlayer.value = null;
-    }, 3000); // 3 second delay
+
+    // Einladung an das Backend senden
+    await fetch('/api/challenge/send', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json', // Muss gesetzt sein für JSON
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token.value}`
+        },
+      body: JSON.stringify({
+        fromPlayer: loggedInUser.value.name,
+        targetPlayer: selectedPlayer.value.name,
+        level: selectedLevel.value
+      })
+    });
+
+    // Direkt das Spiel für beide starten (Simulation)
+    emit('start-game', { opponent: selectedPlayer.value, level: selectedLevel.value });
+    invitationSent.value = false;
+    selectedPlayer.value = null;
   }
 }
+
+let challengePolling = null;
+
+function startChallengePolling() {
+  challengePolling = setInterval(async () => {
+    if (!loggedInUser.value.name) return;
+    const res = await fetch(`/api/challenge/pending/${loggedInUser.value.name}`, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token.value}`
+      }
+    });
+    if (res.status === 200) {
+      const data = await res.json();
+      emit('start-game', { opponent: { name: data.challenger }, level: data.level }); // Level aus Antwort
+      clearInterval(challengePolling);
+    }
+  }, 3000);
+}
+
+onMounted(() => {
+  // ...dein bestehender onMounted-Code...
+  startChallengePolling();
+});
+
+onBeforeUnmount(() => {
+  if (challengePolling) clearInterval(challengePolling);
+});
+
 
 /**
  * @function togglePlayerSelection

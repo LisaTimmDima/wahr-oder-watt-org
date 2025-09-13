@@ -76,8 +76,36 @@ function toggleAnswer(answerId) {
   }
 }
 
-function submitAnswers(isTimeout = false) {
+async function checkGameStatus() {
+  const resp = await fetch(`/api/duels/${props.gameDetails.id}/check-status`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token.value}` }
+  });
+  const status = await resp.json();
+  if (status === 'FINISHED') {
+    alert("Das Spiel ist beendet!");
+    emit('show-lobby');
+    return true;
+  }
+  return false;
+}
+
+async function submitAnswers(isTimeout = false) {
   clearInterval(timerInterval);
+
+  // Speedrun-Modus: Zeit serverseitig prüfen
+  if (level.value === 1) {
+    const resp = await fetch(`/api/duels/${props.gameDetails.id}/check-time`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token.value}` }
+    });
+    const isFinished = await resp.json();
+    if (isFinished) {
+      alert("Zeit abgelaufen! Das Duell ist beendet.");
+      emit('show-lobby');
+      return;
+    }
+  }
 
   if (isTimeout) {
     alert("Zeit abgelaufen!");
@@ -94,12 +122,17 @@ function submitAnswers(isTimeout = false) {
 
   alert(`Du hast in dieser Runde ${scoreForRound} Punkte erzielt! Gesamt: ${loggedInPlayer.value.score}`);
 
+  // Status nach jedem Schritt prüfen
+  const finished = await checkGameStatus();
+  if (finished) return;
+
   if (currentRound.value < maxRounds) {
     currentRound.value++;
     selectedAnswers.value = [];
     startTimer();
   } else {
     alert(`Spiel beendet! Endstand: ${loggedInPlayer.value.score}`);
+    emit('show-lobby');
   }
 }
 
@@ -121,8 +154,19 @@ function startTimer() {
   }, 1000);
 }
 
-function goBackToLobby() {
+async function goBackToLobby() {
   if (confirm("Möchtest du das Spiel wirklich verlassen? Dein aktueller Punktestand geht verloren.")) {
+    try {
+          await fetch(`/api/duels/${props.gameDetails.id}/leave?playerId=${loggedInPlayer.value.id}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token.value}`,
+              'Content-Type': 'application/json'
+            }
+          });
+        } catch (e) {
+          alert("Fehler beim Verlassen des Spiels.");
+        }
     emit('show-lobby');
   }
 }
