@@ -27,6 +27,25 @@ const props = defineProps({
 // ==================================================================================
 // Reactive State: ref() erstellt reaktive Variablen für den Spielzustand.
 // ==================================================================================
+// Hole das Duell aus den Props
+const duel = computed(() => props.gameDetails?.duel);
+
+// Initialisiere die Runden korrekt
+const duelRounds = computed(() => duel.value?.rounds || []);
+
+// Für die aktuelle Runde:
+const currentRoundId = computed(() => duelRounds.value[currentRoundIndex.value]?.id);
+
+const isReady = ref(false);
+const currentRoundIndex = ref(0);
+
+onMounted(async () => {
+  if (currentRoundId.value && props.gameDetails.id) {
+      isReady.value = await checkReadyForNextRound(currentRoundId.value, props.gameDetails.id);
+    } else {
+      isReady.value = false; // oder ein Ladezustand
+    }
+});
 
 const loggedInPlayer = ref({ name: 'Spieler 1', score: 0 });
 const timer = ref(0);
@@ -77,6 +96,11 @@ function toggleAnswer(answerId) {
 }
 
 async function checkGameStatus() {
+  if (!props.gameDetails.id || isNaN(Number(props.gameDetails.id))) {
+    alert("Fehler: Duell-ID ist nicht gesetzt!");
+    emit('show-lobby');
+    return true;
+  }
   const resp = await fetch(`/api/duels/${props.gameDetails.id}/check-status`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token.value}` }
@@ -126,13 +150,24 @@ async function submitAnswers(isTimeout = false) {
   const finished = await checkGameStatus();
   if (finished) return;
 
-  if (currentRound.value < maxRounds) {
-    currentRound.value++;
-    selectedAnswers.value = [];
-    startTimer();
+  // --- NEU: Prüfe, ob beide Spieler bereit sind ---
+  const roundId = currentRound.value; // oder die tatsächliche roundId aus deinen Daten
+  const duelId = props.gameDetails.id;
+  const isReady = await checkReadyForNextRound(roundId, duelId);
+
+  if (isReady) {
+    // Nächste Runde starten
+    if (currentRound.value < maxRounds) {
+      currentRound.value++;
+      selectedAnswers.value = [];
+      startTimer();
+    } else {
+      alert(`Spiel beendet! Endstand: ${loggedInPlayer.value.score}`);
+      emit('show-lobby');
+    }
   } else {
-    alert(`Spiel beendet! Endstand: ${loggedInPlayer.value.score}`);
-    emit('show-lobby');
+    // Optional: Warte auf den anderen Spieler (z.B. Polling starten)
+    // Zeige eine Nachricht: "Warte auf den anderen Spieler..."
   }
 }
 
@@ -168,6 +203,35 @@ async function goBackToLobby() {
           alert("Fehler beim Verlassen des Spiels.");
         }
     emit('show-lobby');
+  }
+}
+
+async function checkReadyForNextRound(roundId, duelId) {
+  const token = localStorage.getItem('jwt');
+  const resp = await fetch(`/api/duel-rounds/${roundId}/ready-for-next?duelId=${duelId}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json'
+    }
+  });
+  if (!resp.ok) throw new Error('Fehler beim Prüfen des Rundenstatus');
+  return await resp.json(); // true oder false
+}
+
+async function confirmSelection() {
+  try {
+    // API-Call zur Bestätigung der Auswahl
+    await fetch(`/api/duel-rounds/${currentRoundId.value}/confirm-selection?playerId=${loggedInPlayer.value.id}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token.value}`
+      }
+    });
+    // Status neu abfragen
+    isReady.value = await checkReadyForNextRound(currentRoundId.value, props.gameDetails.id);
+  } catch (e) {
+    alert('Fehler beim Bestätigen der Auswahl: ' + e.message);
   }
 }
 
@@ -212,15 +276,21 @@ onUnmounted( () => {
 </script>
 
 <template>
-  <div class="bg-gray-100 min-h-screen flex flex-col p-2 sm:p-4" :style="containerStyle" :class="{ 'high-contrast': isHighContrast }">
-    
+  <div v-if="!isReady" class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <div class="text-2xl text-gray-700 mb-4">Warte auf Gegner...</div>
+    <button @click="confirmSelection" class="px-6 py-3 bg-blue-500 text-white rounded-lg font-bold">
+      Auswahl bestätigen
+    </button>
+  </div>
+  <div v-else class="bg-gray-100 min-h-screen flex flex-col p-2 sm:p-4" :style="containerStyle" :class="{ 'high-contrast': isHighContrast }">
+
         <header class="w-full max-w-4xl mx-auto">
       <div class="flex justify-between items-center mb-4">
         <button @click="goBackToLobby" data-test="back-to-lobby-button" class="flex items-center gap-2 text-red-600 hover:text-blue-600 font-semibold transition-colors">
           <ArrowUturnLeftIcon class="h-6 w-6" />
           <span class="hidden sm:inline">Zurück zur Lobby</span>
         </button>
-        
+
         <div class="flex items-center gap-2">
           <img src="../assets/gluehbirne.svg" alt="Wahr oder Watt Logo" class="h-12 w-auto" style="transform: scale(0.8);">
           <h1 class="text-2xl font-bold text-gray-800">Wahr oder Watt?</h1>
@@ -237,7 +307,7 @@ onUnmounted( () => {
         </div>
       </div>
       <div class="bg-white rounded-xl shadow-md p-2 sm:p-4 grid grid-cols-3 items-center gap-2 sm:gap-4">
-        
+
         <!-- Angemeldeter Spieler -->
         <div class="flex items-center gap-2 sm:gap-3">
           <div class="bg-gray-200 p-1 sm:p-2 rounded-full">
@@ -276,7 +346,7 @@ onUnmounted( () => {
     </header>
 
     <main class="w-full max-w-4xl mx-auto flex-grow flex flex-col items-center justify-center mt-4">
-      
+
       <!-- Aktuelle Frage -->
       <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 text-center w-full">
         <div class="text-6xl sm:text-7xl mb-2">{{ currentQuestion.item.icon }}</div>

@@ -1,9 +1,11 @@
 package com.school.project.wahr_oder_watt.controller;
 
+import com.school.project.wahr_oder_watt.dto.ChallengeResponse;
 import com.school.project.wahr_oder_watt.dto.DuelDto;
 import com.school.project.wahr_oder_watt.model.Duel;
 import com.school.project.wahr_oder_watt.model.DuelMode;
 import com.school.project.wahr_oder_watt.model.DuelStatus;
+import com.school.project.wahr_oder_watt.service.ChallengeService;
 import com.school.project.wahr_oder_watt.service.DuelService;
 import java.text.ParseException;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import java.util.List;
 public class DuelController {
 
   private final DuelService duelService;
+  private final ChallengeService challengeService;
 
   /**
    * Gibt alle Duelle zurück.
@@ -51,6 +54,12 @@ public class DuelController {
 
     Duel duel = duelService.instantiateDuel(challengerId, opponentId, level, currentTime);
     duel = duelService.save(duel);
+
+    // Challenge für den Gegner speichern
+    String challengerName = duel.getPlayer1().getUsername();
+    String opponentName = duel.getPlayer2().getUsername();
+    challengeService.addChallenge(opponentName, new ChallengeResponse(duel.getId(), challengerName, level));
+
     return ResponseEntity.ok(duel);
   }
 

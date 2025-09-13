@@ -78,27 +78,35 @@ async function startGame() {
   if (selectedPlayer.value && selectedLevel.value) {
     invitationSent.value = true;
 
-    // Einladung an das Backend senden
-    await fetch('/api/challenge/send', {
+    // Duell im Backend erstellen
+    const resp = await fetch('/api/duels', {
       method: 'POST',
       headers: {
-          'Content-Type': 'application/json', // Muss gesetzt sein für JSON
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token.value}`
-        },
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token.value}`
+      },
       body: JSON.stringify({
-        fromPlayer: loggedInUser.value.name,
-        targetPlayer: selectedPlayer.value.name,
-        level: selectedLevel.value
+        challengerId: loggedInUser.value.id,
+        opponentId: selectedPlayer.value.id,
+        level: selectedLevel.value,
+        currentTime: Date.now()
       })
     });
+    const duel = await resp.json();
 
-    // Direkt das Spiel für beide starten (Simulation)
-    emit('start-game', { opponent: selectedPlayer.value, level: selectedLevel.value });
+    // Spielansicht mit Duell-ID öffnen
+    emit('start-game', {
+      id: duel.id,
+      opponent: { id: selectedPlayer.value.id, name: selectedPlayer.value.name },
+      level: selectedLevel.value
+    });
+
     invitationSent.value = false;
     selectedPlayer.value = null;
   }
 }
+
 
 let challengePolling = null;
 
@@ -120,7 +128,6 @@ function startChallengePolling() {
 }
 
 onMounted(() => {
-  // ...dein bestehender onMounted-Code...
   startChallengePolling();
 });
 

@@ -3,6 +3,7 @@ package com.school.project.wahr_oder_watt.controller;
 import com.school.project.wahr_oder_watt.dto.ChallengeRequest;
 import com.school.project.wahr_oder_watt.dto.ChallengeRespond;
 import com.school.project.wahr_oder_watt.dto.ChallengeResponse;
+import com.school.project.wahr_oder_watt.service.ChallengeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,18 +15,19 @@ public class ChallengeController {
 
   private final Map<String, String> challenges = new ConcurrentHashMap<>();
 
-  @PostMapping("/send")
-  public void sendChallenge(@RequestBody ChallengeRequest request) {
-    challenges.put(request.getTargetPlayer(), request.getFromPlayer());
+  private final ChallengeService challengeService;
+
+  public ChallengeController(ChallengeService challengeService) {
+    this.challengeService = challengeService;
   }
 
-  @GetMapping("/pending/{player}")
-  public ResponseEntity<ChallengeResponse> getPendingChallenge(@PathVariable String player) {
-    String challenger = challenges.get(player);
-    if (challenger != null) {
-      return ResponseEntity.ok(new ChallengeResponse(challenger));
+  @GetMapping("/pending/{username}")
+  public ResponseEntity<ChallengeResponse> getPendingChallenge(@PathVariable String username) {
+    ChallengeResponse challenge = challengeService.findPendingForUser(username);
+    if (challenge == null) {
+      return ResponseEntity.noContent().build();
     }
-    return ResponseEntity.noContent().build();
+    return ResponseEntity.ok(challenge);
   }
 
   @PostMapping("/leave/{player}")

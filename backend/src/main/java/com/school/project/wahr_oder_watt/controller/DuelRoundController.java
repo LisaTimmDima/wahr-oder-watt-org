@@ -1,7 +1,9 @@
 package com.school.project.wahr_oder_watt.controller;
 
+import com.school.project.wahr_oder_watt.model.Duel;
 import com.school.project.wahr_oder_watt.model.DuelRound;
 import com.school.project.wahr_oder_watt.service.DuelRoundService;
+import com.school.project.wahr_oder_watt.service.DuelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,7 @@ import java.util.List;
 public class DuelRoundController {
 
   private final DuelRoundService duelRoundService;
+  private final DuelService duelService;
 
   /**
    * Gibt alle Duellrunden zurück.
@@ -83,5 +86,16 @@ public class DuelRoundController {
       @RequestParam Long playerId) {
     duelRoundService.confirmSelection(id, playerId);
     return ResponseEntity.ok().build();
+  }
+
+  /**
+   * Prüft, ob beide Spieler bereit für die nächste Runde sind.
+   */
+  @GetMapping("/{id}/ready-for-next")
+  public ResponseEntity<Boolean> readyForNextRound(@PathVariable Long id, @RequestParam Long duelId) {
+    Duel duel = duelService.findById(duelId);
+    DuelRound round = duelRoundService.findById(id);
+    boolean bothConfirmed = duelRoundService.bothPlayersConfirmed(round.getId(), duel.getPlayer1().getId(), duel.getPlayer2().getId());
+    return ResponseEntity.ok(bothConfirmed);
   }
 }

@@ -75,7 +75,8 @@ public class DuelService {
     existingDuel.setStatus(duel.getStatus());
     existingDuel.setMode(duel.getMode());
     existingDuel.setRounds(duel.getRounds());
-    existingDuel.setPlayers(duel.getPlayers());
+    existingDuel.setPlayer1(duel.getPlayer1());
+    existingDuel.setPlayer2(duel.getPlayer2());
     existingDuel.setPlaytime(duel.getPlaytime());
     return duelRepository.save(existingDuel);
   }
@@ -104,21 +105,13 @@ public class DuelService {
      * Instanziiert ein neues Duell mit den übergebenen Parametern.
      */
     Duel duel = new Duel();
-    duel.setChallengerId(challengerId);
-    duel.setOpponentId(opponentId);
+    duel.setPlayer1(userService.findById(challengerId));
+    duel.setPlayer2(userService.findById(opponentId));
     duel.setChallengerLeft(false);
     duel.setOpponentLeft(false);
     duel.setMode(level == 1 ? SPEEDRUN : RUNDENDUELL);
     duel.setPlaytime(new Date(currentTime));
     duel.setStatus(RUNNING);
-
-    /**
-     * Fügt die beiden Spieler dem Duell hinzu.
-     */
-    List<User> players = new ArrayList<>();
-    players.add(userService.findById(challengerId));
-    players.add(userService.findById(opponentId));
-    duel.setPlayers(players);
 
     return duel;
   }
@@ -171,8 +164,8 @@ public class DuelService {
    */
   public boolean allRoundsConfirmed(Duel duel) {
     if (duel.getRounds() == null || duel.getRounds().isEmpty()) return false;
-    Long challengerId = duel.getChallengerId();
-    Long opponentId = duel.getOpponentId();
+    Long challengerId = duel.getPlayer1().getId();
+    Long opponentId = duel.getPlayer2().getId();
     return duel.getRounds().stream()
         .allMatch(round -> duelRoundService.bothPlayersConfirmed(round.getId(), challengerId, opponentId));
   }
