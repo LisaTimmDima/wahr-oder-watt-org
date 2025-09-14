@@ -27,25 +27,21 @@ const props = defineProps({
 // ==================================================================================
 // Reactive State: ref() erstellt reaktive Variablen für den Spielzustand.
 // ==================================================================================
-// Hole das Duell aus den Props
+
 const duel = computed(() => props.gameDetails?.duel);
-
-// Initialisiere die Runden korrekt
-const duelRounds = computed(() => duel.value?.rounds || []);
-
-// Für die aktuelle Runde:
+const duelRounds = computed(() => props.gameDetails?.duel?.rounds || []);
 const currentRoundId = computed(() => duelRounds.value[currentRoundIndex.value]?.id);
 
-const isReady = ref(false);
+const isReady = ref(true);
 const currentRoundIndex = ref(0);
 
-onMounted(async () => {
-  if (currentRoundId.value && props.gameDetails.id) {
-      isReady.value = await checkReadyForNextRound(currentRoundId.value, props.gameDetails.id);
-    } else {
-      isReady.value = false; // oder ein Ladezustand
-    }
-});
+//onMounted(async () => {
+//  if (currentRoundId.value && props.gameDetails.id) {
+//      isReady.value = await checkReadyForNextRound(currentRoundId.value, props.gameDetails.id);
+//    } else {
+//      isReady.value = false; // oder ein Ladezustand
+//    }
+//});
 
 const loggedInPlayer = ref({ name: 'Spieler 1', score: 0 });
 const timer = ref(0);
@@ -150,15 +146,15 @@ async function submitAnswers(isTimeout = false) {
   const finished = await checkGameStatus();
   if (finished) return;
 
-  // --- NEU: Prüfe, ob beide Spieler bereit sind ---
-  const roundId = currentRound.value; // oder die tatsächliche roundId aus deinen Daten
+  // Prüfe, ob beide Spieler bereit sind
+  const roundId = currentRoundId.value; // oder die tatsächliche roundId aus deinen Daten
   const duelId = props.gameDetails.id;
   const isReady = await checkReadyForNextRound(roundId, duelId);
 
   if (isReady) {
     // Nächste Runde starten
-    if (currentRound.value < maxRounds) {
-      currentRound.value++;
+    if (ccurrentRoundId.value < maxRounds) {
+      currentRoundId.value++;
       selectedAnswers.value = [];
       startTimer();
     } else {
@@ -251,7 +247,7 @@ function toggleHighContrast() {
 // ==================================================================================
 
 onMounted(async () => {
-  if (props.gameDetails) {
+  if (props.gameDetails && isReady) {
     startTimer();
   }
   loading.value = true;
@@ -277,11 +273,14 @@ onUnmounted( () => {
 
 <template>
   <div v-if="!isReady" class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-    <div class="text-2xl text-gray-700 mb-4">Warte auf Gegner...</div>
-    <button @click="confirmSelection" class="px-6 py-3 bg-blue-500 text-white rounded-lg font-bold">
-      Auswahl bestätigen
-    </button>
-  </div>
+      <div class="text-2xl text-gray-700 mb-4">Warte auf Gegner...</div>
+      <button @click="confirmSelection" class="px-6 py-3 bg-blue-500 text-white rounded-lg font-bold">
+        Auswahl bestätigen
+      </button>
+      <button @click="goBackToLobby" class="mt-4 px-6 py-3 bg-red-500 text-white rounded-lg font-bold">
+        Zurück zur Lobby
+      </button>
+    </div>
   <div v-else class="bg-gray-100 min-h-screen flex flex-col p-2 sm:p-4" :style="containerStyle" :class="{ 'high-contrast': isHighContrast }">
 
         <header class="w-full max-w-4xl mx-auto">
