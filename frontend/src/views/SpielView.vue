@@ -1,175 +1,62 @@
 <script setup>
-// ==================================================================================
-// Verantwortlichkeiten:
-// - Lisa: Komplette UI- und Spiellogik, Timer, State-Management, Event-Handling.
-// - Dima:  Implementierung der API-Aufrufe zum Abrufen der Fragen.
-// ==================================================================================
-
-// import: Lädt Vue-Funktionen (ref, computed, onMounted, onUnmounted) und Icon-Komponenten.
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { UserCircleIcon, ClockIcon, ArrowUturnLeftIcon } from '@heroicons/vue/24/solid';
+import { UserCircleIcon, ClockIcon, ArrowUturnLeftIcon, DevicePhoneMobileIcon } from '@heroicons/vue/24/solid';
 
-// ==================================================================================
-// Emits: Deklariert Events, um mit der Eltern-Komponente (App.vue) zu kommunizieren.
-// ==================================================================================
 const emit = defineEmits(['show-lobby']);
 
-// ==================================================================================
-// Props: Deklariert die Daten, die von der Eltern-Komponente (App.vue) an diese Komponente übergeben werden.
-// ==================================================================================
 const props = defineProps({
-  gameDetails: {
-    type: Object,
-    required: true
-  }
+  gameDetails: { type: Object, required: true }
 });
 
-// ==================================================================================
-// Reactive State: ref() erstellt reaktive Variablen für den Spielzustand.
-// ==================================================================================
-
+// State
 const duel = computed(() => props.gameDetails?.duel);
-const duelRounds = computed(() => props.gameDetails?.duel?.rounds || []);
+const duelRounds = computed(() => duel.value?.rounds || []);
+const currentRoundIndex = ref(0);
 const currentRoundId = computed(() => duelRounds.value[currentRoundIndex.value]?.id);
 
-const isReady = ref(true);
-const currentRoundIndex = ref(0);
+const loggedInPlayer = ref({ id: 0, name: 'Spieler', score: 0 });
+const opponentPlayer = computed(() => props.gameDetails.opponent || { name: 'Gegner', score: 0 });
+const level = computed(() => props.gameDetails.level || 1);
 
-//onMounted(async () => {
-//  if (currentRoundId.value && props.gameDetails.id) {
-//      isReady.value = await checkReadyForNextRound(currentRoundId.value, props.gameDetails.id);
-//    } else {
-//      isReady.value = false; // oder ein Ladezustand
-//    }
-//});
-
-const loggedInPlayer = ref({ name: 'Spieler 1', score: 0 });
 const timer = ref(0);
-const currentRound = ref(1);
-const maxRounds = 5;
 let timerInterval = null;
-const currentQuestion = ref({
-  item: { name: 'Desktop-PC', icon: '🖥️' },
-  answers: [
-    { id: 'e1', icon: '🛜'},
-    { id: 'e2', icon: '🔌'},
-    { id: 'e3', icon: '📀'},
-    { id: 'e4', icon: '⌨️'},
+
+const currentDevice = computed(() => duelRounds.value[currentRoundIndex.value]?.device || {
+  name: 'Gerät',
+  icon: '📱',
+  attributes: [
+    { id: 1, name: 'Leistung', icon: '⚡' },
+    { id: 2, name: 'Gewicht', icon: '🏋️' },
+    { id: 3, name: 'Preis', icon: '💰' },
+    { id: 4, name: 'Größe', icon: '📏' }
   ],
-  correctAnswers: ['e2', 'e4']
+  correctAttributes: [1, 3] // Beispiel: Leistung und Preis sind korrekt
 });
-const selectedAnswers = ref([]);
+const selectedAttributes = ref([]);
+const isReady = ref(true);
 const loading = ref(true);
+
 const token = computed(() => localStorage.getItem('jwt'));
+const maxRounds = computed(() => duelRounds.value.length || 5);
 
-
-// BARRIEREFREIHEIT: Reaktive Variablen für Zoom und Kontrast.
+// Barrierefreiheit
 const zoomLevel = ref(1);
 const isHighContrast = ref(false);
-
-// ==================================================================================
-// Computed Properties: Abgeleitete, reaktive Werte.
-// ==================================================================================
-
-const opponentPlayer = computed(() => props.gameDetails.opponent);
-const level = computed(() => props.gameDetails.level);
-const isSelected = computed(() => {
-  return (answerId) => selectedAnswers.value.includes(answerId);
-});
 const containerStyle = computed(() => ({ zoom: zoomLevel.value }));
 
-// ==================================================================================
-// Methoden: Funktionen zur Steuerung der Spiellogik.
-// ==================================================================================
-
-function toggleAnswer(answerId) {
-  const index = selectedAnswers.value.indexOf(answerId);
-  if (index === -1) {
-    selectedAnswers.value.push(answerId);
-  } else {
-    selectedAnswers.value.splice(index, 1);
-  }
+function toggleAttribute(attrId) {
+  const idx = selectedAttributes.value.indexOf(attrId);
+  if (idx === -1) selectedAttributes.value.push(attrId);
+  else selectedAttributes.value.splice(idx, 1);
 }
 
-async function checkGameStatus() {
-  if (!props.gameDetails.id || isNaN(Number(props.gameDetails.id))) {
-    alert("Fehler: Duell-ID ist nicht gesetzt!");
-    emit('show-lobby');
-    return true;
-  }
-  const resp = await fetch(`/api/duels/${props.gameDetails.id}/check-status`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${token.value}` }
-  });
-  const status = await resp.json();
-  if (status === 'FINISHED') {
-    alert("Das Spiel ist beendet!");
-    emit('show-lobby');
-    return true;
-  }
-  return false;
-}
-
-async function submitAnswers(isTimeout = false) {
-  clearInterval(timerInterval);
-
-  // Speedrun-Modus: Zeit serverseitig prüfen
-  if (level.value === 1) {
-    const resp = await fetch(`/api/duels/${props.gameDetails.id}/check-time`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token.value}` }
-    });
-    const isFinished = await resp.json();
-    if (isFinished) {
-      alert("Zeit abgelaufen! Das Duell ist beendet.");
-      emit('show-lobby');
-      return;
-    }
-  }
-
-  if (isTimeout) {
-    alert("Zeit abgelaufen!");
-  }
-
-  let scoreForRound = 0;
-  for (const answerId of selectedAnswers.value) {
-    if (currentQuestion.value.correctAnswers.includes(answerId)) {
-      scoreForRound++;
-    }
-  }
-
-  loggedInPlayer.value.score += scoreForRound;
-
-  alert(`Du hast in dieser Runde ${scoreForRound} Punkte erzielt! Gesamt: ${loggedInPlayer.value.score}`);
-
-  // Status nach jedem Schritt prüfen
-  const finished = await checkGameStatus();
-  if (finished) return;
-
-  // Prüfe, ob beide Spieler bereit sind
-  const roundId = currentRoundId.value; // oder die tatsächliche roundId aus deinen Daten
-  const duelId = props.gameDetails.id;
-  const isReady = await checkReadyForNextRound(roundId, duelId);
-
-  if (isReady) {
-    // Nächste Runde starten
-    if (ccurrentRoundId.value < maxRounds) {
-      currentRoundId.value++;
-      selectedAnswers.value = [];
-      startTimer();
-    } else {
-      alert(`Spiel beendet! Endstand: ${loggedInPlayer.value.score}`);
-      emit('show-lobby');
-    }
-  } else {
-    // Optional: Warte auf den anderen Spieler (z.B. Polling starten)
-    // Zeige eine Nachricht: "Warte auf den anderen Spieler..."
-  }
-}
+function increaseZoom() { zoomLevel.value += 0.1; }
+function decreaseZoom() { zoomLevel.value = Math.max(0.5, zoomLevel.value - 0.1); }
+function toggleHighContrast() { isHighContrast.value = !isHighContrast.value; }
 
 async function fetchCurrentUser() {
-  const resp = await fetch('/api/users/me', { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token.value}` } });
-  if (!resp.ok) throw new Error('Fehler beim Laden der Benutzer');
+  const resp = await fetch('/api/users/me', { headers: { 'Authorization': `Bearer ${token.value}` } });
+  if (!resp.ok) throw new Error('Fehler beim Laden des Benutzers');
   return await resp.json();
 }
 
@@ -177,216 +64,179 @@ function startTimer() {
   clearInterval(timerInterval);
   timer.value = level.value === 1 ? 60 : 10;
   timerInterval = setInterval(() => {
-    if (timer.value > 0) {
-      timer.value--;
-    } else {
-      submitAnswers(true);
-    }
+    if (timer.value > 0) timer.value--;
+    else submitAttributes(true);
   }, 1000);
 }
 
+async function submitAttributes(isTimeout = false) {
+  clearInterval(timerInterval);
+
+  let scoreForRound = 0;
+  for (const attrId of selectedAttributes.value) {
+    if (currentDevice.value.correctAttributes.includes(attrId)) scoreForRound++;
+  }
+  loggedInPlayer.value.score += scoreForRound;
+
+  if (isTimeout) alert('Zeit abgelaufen!');
+  else alert(`Du hast ${scoreForRound} Punkte erzielt!`);
+
+  // API: Auswahl bestätigen
+  await fetch(`/api/duel-rounds/${currentRoundId.value}/confirm-selection?playerId=${loggedInPlayer.value.id}`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token.value}` }
+  });
+
+  // API: Prüfen, ob beide bereit sind
+  const resp = await fetch(`/api/duel-rounds/${currentRoundId.value}/ready-for-next?duelId=${props.gameDetails.id}`, {
+    headers: { 'Authorization': `Bearer ${token.value}` }
+  });
+  const ready = await resp.json();
+
+  if (ready) {
+    if (currentRoundIndex.value < maxRounds.value - 1) {
+      currentRoundIndex.value++;
+      selectedAttributes.value = [];
+      startTimer();
+    } else {
+      alert(`Spiel beendet! Endstand: ${loggedInPlayer.value.score}`);
+      emit('show-lobby');
+    }
+  } else {
+    isReady.value = false;
+  }
+}
+
 async function goBackToLobby() {
-  if (confirm("Möchtest du das Spiel wirklich verlassen? Dein aktueller Punktestand geht verloren.")) {
+  if (confirm('Möchtest du das Spiel wirklich verlassen?')) {
     try {
-          await fetch(`/api/duels/${props.gameDetails.id}/leave?playerId=${loggedInPlayer.value.id}`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token.value}`,
-              'Content-Type': 'application/json'
-            }
-          });
-        } catch (e) {
-          alert("Fehler beim Verlassen des Spiels.");
-        }
+      await fetch(`/api/duels/${props.gameDetails.id}/leave?playerId=${loggedInPlayer.value.id}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token.value}` }
+      });
+    } catch {}
     emit('show-lobby');
   }
 }
 
-async function checkReadyForNextRound(roundId, duelId) {
-  const token = localStorage.getItem('jwt');
-  const resp = await fetch(`/api/duel-rounds/${roundId}/ready-for-next?duelId=${duelId}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Accept': 'application/json'
-    }
-  });
-  if (!resp.ok) throw new Error('Fehler beim Prüfen des Rundenstatus');
-  return await resp.json(); // true oder false
-}
-
-async function confirmSelection() {
-  try {
-    // API-Call zur Bestätigung der Auswahl
-    await fetch(`/api/duel-rounds/${currentRoundId.value}/confirm-selection?playerId=${loggedInPlayer.value.id}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token.value}`
-      }
-    });
-    // Status neu abfragen
-    isReady.value = await checkReadyForNextRound(currentRoundId.value, props.gameDetails.id);
-  } catch (e) {
-    alert('Fehler beim Bestätigen der Auswahl: ' + e.message);
-  }
-}
-
-// BARRIEREFREIHEIT: Methoden
-function increaseZoom() {
-  zoomLevel.value += 0.1;
-}
-function decreaseZoom() {
-  zoomLevel.value -= 0.1;
-}
-function toggleHighContrast() {
-  isHighContrast.value = !isHighContrast.value;
-}
-
-// ==================================================================================
-// Lifecycle Hooks
-// ==================================================================================
-
+// Lifecycle
 onMounted(async () => {
-  if (props.gameDetails && isReady) {
-    startTimer();
-  }
   loading.value = true;
-  // Aktuellen User laden (Backend) mit Fallback auf localStorage
   try {
     const me = await fetchCurrentUser();
-    loggedInPlayer.value = {
-      id: me.id,
-      name: me.username,
-    };
-  } catch {
-    loggedInPlayer.value = {
-      id: Number(localStorage.getItem('currentUserId')),
-      name: localStorage.getItem('currentUsername')
-    };
-  }
+    loggedInPlayer.value = { id: me.id, name: me.username, score: 0 };
+    startTimer();
+  } catch {}
+  loading.value = false;
 });
 
-onUnmounted( () => {
-  clearInterval(timerInterval);
-});
+onUnmounted(() => clearInterval(timerInterval));
 </script>
 
 <template>
-  <div v-if="!isReady" class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <div class="text-2xl text-gray-700 mb-4">Warte auf Gegner...</div>
-      <button @click="confirmSelection" class="px-6 py-3 bg-blue-500 text-white rounded-lg font-bold">
-        Auswahl bestätigen
+  <div :class="{ 'high-contrast': isHighContrast }" :style="containerStyle" class="min-h-screen bg-gray-100 flex flex-col">
+    <header class="w-full max-w-4xl mx-auto flex justify-between items-center py-4">
+      <button @click="goBackToLobby" class="flex items-center gap-2 text-red-600 hover:text-blue-600 font-semibold">
+        <ArrowUturnLeftIcon class="h-6 w-6" />
+        <span>Zurück zur Lobby</span>
       </button>
-      <button @click="goBackToLobby" class="mt-4 px-6 py-3 bg-red-500 text-white rounded-lg font-bold">
-        Zurück zur Lobby
-      </button>
-    </div>
-  <div v-else class="bg-gray-100 min-h-screen flex flex-col p-2 sm:p-4" :style="containerStyle" :class="{ 'high-contrast': isHighContrast }">
-
-        <header class="w-full max-w-4xl mx-auto">
-      <div class="flex justify-between items-center mb-4">
-        <button @click="goBackToLobby" data-test="back-to-lobby-button" class="flex items-center gap-2 text-red-600 hover:text-blue-600 font-semibold transition-colors">
-          <ArrowUturnLeftIcon class="h-6 w-6" />
-          <span class="hidden sm:inline">Zurück zur Lobby</span>
-        </button>
-
-        <div class="flex items-center gap-2">
-          <img src="../assets/gluehbirne.svg" alt="Wahr oder Watt Logo" class="h-12 w-auto" style="transform: scale(0.8);">
-          <h1 class="text-2xl font-bold text-gray-800">Wahr oder Watt?</h1>
-        </div>
-
-        <div class="flex items-center gap-4">
-            <!-- BARRIEREFREIHEIT: Steuerelemente für Zoom und Kontrast. -->
-            <div class="flex items-center gap-2">
-                <span class="text-sm text-gray-600">Zoom:</span>
-                <button @click="decreaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">-</button>
-                <button @click="increaseZoom" class="px-2 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">+</button>
-            </div>
-            <button @click="toggleHighContrast" class="px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300">Kontrast</button>
-        </div>
+      <div class="flex items-center gap-2">
+        <img src="../assets/gluehbirne.svg" alt="Logo" class="h-10 w-auto" />
+        <span class="text-2xl font-bold text-gray-800">Wahr oder Watt?</span>
       </div>
-      <div class="bg-white rounded-xl shadow-md p-2 sm:p-4 grid grid-cols-3 items-center gap-2 sm:gap-4">
-
-        <!-- Angemeldeter Spieler -->
-        <div class="flex items-center gap-2 sm:gap-3">
-          <div class="bg-gray-200 p-1 sm:p-2 rounded-full">
-            <UserCircleIcon class="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
-          </div>
-          <div>
-            <h2 class="text-base sm:text-xl font-bold text-gray-800">{{ loggedInPlayer.name }}</h2>
-            <p class="text-sm sm:text-lg font-semibold text-blue-600">Score: {{ loggedInPlayer.score }}</p>
-          </div>
-        </div>
-
-        <!-- Timer und Rundenanzeige -->
-        <div class="text-center">
-          <div class="flex items-center justify-center gap-1 sm:gap-2">
-            <ClockIcon class="h-6 w-6 sm:h-8 sm:w-8 text-gray-500" />
-            <span class="text-2xl sm:text-4xl font-mono font-bold text-gray-800">{{ timer.toString().padStart(2, '0') }}s</span>
-          </div>
-          <div class="text-xs sm:text-sm font-semibold text-gray-600">
-              <div v-if="level === 1">Gesamtzeit</div>
-              <div v-if="level === 2">Runde {{ currentRound }} / {{ maxRounds }}</div>
-          </div>
-        </div>
-
-        <!-- Gegner -->
-        <div class="flex items-center justify-end gap-2 sm:gap-3">
-          <div class="text-right">
-            <h2 class="text-base sm:text-xl font-bold text-gray-800">{{ opponentPlayer.name }}</h2>
-            <p class="text-sm sm:text-lg font-semibold text-gray-500">Score: 0</p>
-          </div>
-          <div class="bg-gray-200 p-1 sm:p-2 rounded-full">
-            <UserCircleIcon class="h-6 w-6 sm:h-8 sm:w-8 text-gray-500" />
-          </div>
-        </div>
-
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-600">Zoom:</span>
+        <button @click="decreaseZoom" class="px-2 py-1 bg-gray-200 rounded">-</button>
+        <button @click="increaseZoom" class="px-2 py-1 bg-gray-200 rounded">+</button>
+        <button @click="toggleHighContrast" class="px-3 py-1 bg-gray-200 rounded">Kontrast</button>
       </div>
     </header>
 
-    <main class="w-full max-w-4xl mx-auto flex-grow flex flex-col items-center justify-center mt-4">
+    <main class="w-full max-w-4xl mx-auto flex-grow flex flex-col items-center justify-center">
+      <div v-if="loading" class="text-center text-gray-500 py-16">Lädt...</div>
+      <div v-else class="w-full">
+        <!-- Fortschrittsbalken -->
+        <div class="w-full bg-gray-300 rounded-full h-4 mb-6">
+          <div :style="{ width: ((currentRoundIndex + 1) / maxRounds * 100) + '%' }"
+               class="bg-blue-500 h-4 rounded-full transition-all"></div>
+        </div>
 
-      <!-- Aktuelle Frage -->
-      <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 text-center w-full">
-        <div class="text-6xl sm:text-7xl mb-2">{{ currentQuestion.item.icon }}</div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">{{ currentQuestion.item.name }}</h1>
-      </div>
+        <!-- Spieler & Gegner -->
+        <div class="grid grid-cols-2 gap-6 mb-6">
+          <div class="flex items-center gap-3 bg-white rounded-xl shadow p-4">
+            <UserCircleIcon class="h-8 w-8 text-blue-600" />
+            <div>
+              <div class="font-bold text-lg text-gray-800">{{ loggedInPlayer.name }}</div>
+              <div class="text-blue-600 font-semibold">Score: {{ loggedInPlayer.score }}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 bg-white rounded-xl shadow p-4 justify-end">
+            <div>
+              <div class="font-bold text-lg text-gray-800 text-right">{{ opponentPlayer.name }}</div>
+              <div class="text-gray-500 font-semibold text-right">Score: 0</div>
+            </div>
+            <UserCircleIcon class="h-8 w-8 text-gray-500" />
+          </div>
+        </div>
 
-      <!-- Antwortmöglichkeiten -->
-      <div class="grid grid-cols-2 gap-3 sm:gap-4 w-full mb-4 sm:mb-6">
+        <!-- Timer & Rundenanzeige -->
+        <div class="flex items-center justify-center gap-3 mb-6">
+          <ClockIcon class="h-8 w-8 text-gray-500" />
+          <span class="text-3xl font-mono font-bold text-gray-800">{{ timer.toString().padStart(2, '0') }}s</span>
+          <span class="text-gray-600 font-semibold ml-4">
+            <template v-if="level === 1">Speedrun</template>
+            <template v-else>Runde {{ currentRoundIndex + 1 }} / {{ maxRounds }}</template>
+          </span>
+        </div>
+
+        <!-- Gerät anzeigen -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 text-center flex flex-col items-center">
+          <div class="text-7xl mb-2">{{ currentDevice.icon }}</div>
+          <div class="text-2xl font-bold text-gray-800 mb-2">{{ currentDevice.name }}</div>
+          <div class="text-gray-500 text-base">Wähle die passenden Attribute:</div>
+        </div>
+
+        <!-- Attribute zur Auswahl -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <button
+            v-for="attr in currentDevice.attributes"
+            :key="attr.id"
+            @click="toggleAttribute(attr.id)"
+            :class="[
+              'p-4 rounded-2xl border-2 transition-all flex flex-col items-center',
+              selectedAttributes.includes(attr.id)
+                ? 'bg-blue-100 border-blue-500 scale-105'
+                : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+            ]"
+          >
+            <span class="text-4xl">{{ attr.icon }}</span>
+            <span class="font-semibold text-base text-gray-700">{{ attr.name }}</span>
+          </button>
+        </div>
+
+        <!-- Antwort abschicken -->
         <button
-          v-for="answer in currentQuestion.answers"
-          :key="answer.id"
-          @click="toggleAnswer(answer.id)"
-          :data-test="`answer-button-${answer.id}`"
+          @click="submitAttributes(false)"
+          :disabled="selectedAttributes.length === 0"
           :class="[
-            'p-4 rounded-2xl border-2 sm:border-4 transition-all duration-150',
-            'flex flex-col items-center justify-center gap-2',
-            isSelected(answer.id)
-              ? 'bg-blue-100 border-blue-500 shadow-md scale-105'
-              : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+            'w-full font-bold text-xl py-3 rounded-full shadow transition-transform',
+            selectedAttributes.length === 0
+              ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+              : 'bg-blue-500 text-white hover:bg-blue-600 hover:scale-105'
           ]"
         >
-          <span class="text-4xl sm:text-5xl">{{ answer.icon }}</span>
-          <span class="font-semibold text-sm sm:text-base text-gray-700">{{ answer.text }}</span>
+          OK
         </button>
+
+        <!-- Wartebildschirm -->
+        <div v-if="!isReady" class="mt-8 text-center">
+          <div class="text-xl text-gray-700 mb-4">Warte auf Gegner...</div>
+          <button @click="goBackToLobby" class="px-6 py-3 bg-red-500 text-white rounded-lg font-bold">
+            Zurück zur Lobby
+          </button>
+        </div>
       </div>
-
-      <!-- Antwort abschicken Button -->
-      <button @click="submitAnswers(false)"
-              data-test="submit-button"
-              :disabled="selectedAnswers.length === 0"
-              :class="[
-                'font-bold text-xl sm:text-2xl py-3 px-12 sm:py-4 sm:px-16 rounded-full shadow-md transition-transform transform',
-                selectedAnswers.length === 0
-                  ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                  : 'bg-blue-500 text-white hover:bg-blue-600 hover:scale-105'
-              ]">
-        OK
-      </button>
-
     </main>
-
   </div>
 </template>
 
@@ -397,7 +247,7 @@ onUnmounted( () => {
 }
 .high-contrast .bg-white, .high-contrast .bg-gray-50, .high-contrast .bg-blue-100 {
   background-color: #000 !important;
-  border: 2px solid yellow;
+  border: 2px solid yellow !important;
 }
 .high-contrast .text-gray-800, .high-contrast .text-gray-700, .high-contrast .text-gray-600, .high-contrast .text-gray-500, .high-contrast .text-blue-600 {
   color: #fff !important;

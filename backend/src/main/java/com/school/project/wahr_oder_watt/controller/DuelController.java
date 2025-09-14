@@ -2,10 +2,12 @@ package com.school.project.wahr_oder_watt.controller;
 
 import com.school.project.wahr_oder_watt.dto.ChallengeResponse;
 import com.school.project.wahr_oder_watt.dto.DuelDto;
+import com.school.project.wahr_oder_watt.dto.DuelFullDto;
 import com.school.project.wahr_oder_watt.model.Duel;
 import com.school.project.wahr_oder_watt.model.DuelMode;
 import com.school.project.wahr_oder_watt.model.DuelStatus;
 import com.school.project.wahr_oder_watt.service.ChallengeService;
+import com.school.project.wahr_oder_watt.service.DuelDtoMapper;
 import com.school.project.wahr_oder_watt.service.DuelService;
 import java.text.ParseException;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class DuelController {
 
   private final DuelService duelService;
   private final ChallengeService challengeService;
+  private final DuelDtoMapper duelDtoMapper;
 
   /**
    * Gibt alle Duelle zurück.
@@ -37,9 +40,9 @@ public class DuelController {
    * Gibt ein Duell anhand der ID zurück.
    */
   @GetMapping("/{id}")
-  public ResponseEntity<Duel> getDuel(@PathVariable Long id) {
+  public ResponseEntity<DuelFullDto> getDuel(@PathVariable Long id) {
     Duel duel = duelService.findById(id);
-    return ResponseEntity.ok(duel);
+    return ResponseEntity.ok(duelDtoMapper.toDto(duel));
   }
 
   /**
