@@ -7,6 +7,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.Size;
 import java.util.Date;
@@ -32,12 +34,19 @@ public class Duel {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @ManyToOne
+  @JoinColumn(name = "player1_id", nullable = false)
+  private User player1;
+
+  @ManyToOne
+  @JoinColumn(name = "player2_id", nullable = false)
+  private User player2;
+
   /**
-   * players sind die beiden Spieler, die an dem Duell teilnehmen.
+   * challengerLeft und opponentLeft geben an, ob ein Spieler das Duell verlassen hat.
    */
-  @OneToMany(mappedBy = "duel", cascade = CascadeType.ALL)
-  @Size(min = 2, max = 2)
-  private List<User> players;
+  private boolean challengerLeft = false;
+  private boolean opponentLeft = false;
 
   /**
    * mode gibt den Modus des Duells an (z.B. "Speedrun", "Rundenduell").
@@ -61,4 +70,18 @@ public class Duel {
    * playtime gibt die Zeit an, wie lange das Duell verläuft.
    */
   private Date playtime;
+
+  /**
+   * Die Methode removePlayer markiert einen Spieler als verlassen.
+   * Wenn der Spieler der Herausforderer ist, wird challengerLeft auf true gesetzt.
+   * Wenn der Spieler der Herausgeforderte ist, wird opponentLeft auf true gesetzt.
+   * @param playerId
+   */
+  public void removePlayer(Long playerId) {
+    if (player1.getId() != null && player1.getId().equals(playerId)) {
+      challengerLeft = true;
+    } else if (player2.getId() != null && player2.getId().equals(playerId)) {
+      opponentLeft = true;
+    }
+  }
 }
